@@ -483,38 +483,75 @@ class FoodAmigoAutomation:
             data: SEOPageData containing all page information
             page_num: Page number for image matching (1, 2, 3, etc.)
 
+        Returns:
+            str: Status - "success", "partial", or "failed"
+
         Raises:
-            Exception: If page creation fails
+            Exception: If critical page creation fails (basic info/SEO)
         """
         logger.info(f"Creating SEO page: {data.page_name}")
 
-        # Each section is isolated with its own error handling
-        self._click_add_page_button()
-        self._fill_basic_info(data)
-        self._fill_seo_metadata(data)
+        # Track section-level success for accurate reporting
+        sections_completed = {
+            "basic_info": False,
+            "seo_metadata": False,
+            "social_metadata": False,
+            "customizable": False,
+            "faq": False
+        }
 
-        # Social metadata with image upload (isolated)
+        # Critical sections - must succeed or fail the entire page
+        try:
+            self._click_add_page_button()
+            self._fill_basic_info(data)
+            sections_completed["basic_info"] = True
+
+            self._fill_seo_metadata(data)
+            sections_completed["seo_metadata"] = True
+        except Exception as e:
+            logger.error(f"Failed critical sections (basic/SEO): {e}")
+            raise  # Can't continue without basic info
+
+        # Optional sections - isolated error handling
         try:
             self._fill_social_metadata(data, page_num)
+            sections_completed["social_metadata"] = True
         except Exception as e:
             logger.error(f"Failed to fill social metadata: {e}")
             logger.warning("Continuing with remaining sections...")
 
-        # Customizable section with image upload (isolated)
         try:
             self._add_customizable_section(data, page_num)
+            sections_completed["customizable"] = True
         except Exception as e:
             logger.error(f"Failed to add customizable section: {e}")
             logger.warning("Continuing with FAQ section...")
 
-        # FAQ section (isolated)
         try:
             self._add_faq_section(data)
+            sections_completed["faq"] = True
         except Exception as e:
             logger.error(f"Failed to add FAQ section: {e}")
             logger.warning("FAQ section incomplete, but page basics saved")
 
-        logger.info(f"SEO page created: {data.page_name}")
+        # Calculate final status based on completed sections
+        completed_count = sum(sections_completed.values())
+        total_sections = len(sections_completed)
+
+        if completed_count == total_sections:
+            status = "success"
+            logger.info(f"✓ Page creation COMPLETED: {data.page_name} (ALL {total_sections} sections)")
+        elif completed_count >= 2:  # At least basic + SEO (minimum viable page)
+            status = "partial"
+            failed_sections = [k for k, v in sections_completed.items() if not v]
+            logger.warning(f"⚠ Page created with PARTIAL content: {data.page_name}")
+            logger.warning(f"   Completed: {completed_count}/{total_sections} sections")
+            logger.warning(f"   Failed: {', '.join(failed_sections)}")
+        else:
+            status = "failed"
+            logger.error(f"✗ Page creation FAILED: {data.page_name}")
+
+        return status
 
     def _click_add_page_button(self):
         """Click the '+' button to create new page."""
@@ -768,15 +805,18 @@ class FoodAmigoAutomation:
         self.page.wait_for_timeout(700)
 
         logger.debug("  Clicking add button for customizable block...")
-        add_block_btn = self.page.locator("div:nth-child(6) > .w-full.flex > .ant-btn")
-        add_block_btn.wait_for(state="visible", timeout=10000)
-        add_block_btn.click()
+        # FIXED: Use .first to avoid strict mode violation (32 plus buttons in DOM!)
+        # Click the FIRST visible plus button within the Elements panel
+        elements_plus = self.page.get_by_label("Elements").get_by_role("button", name="plus").first
+        elements_plus.wait_for(state="visible", timeout=10000)
+        elements_plus.click()
         logger.debug("  ✓ Block added")
 
         self.page.wait_for_timeout(700)
 
         logger.debug("  Toggling visibility switch...")
-        visibility_switch = self.page.get_by_role("switch", name="eye eye-invisible")
+        # FIXED: Use proven working selector directly (no wasted timeout attempts)
+        visibility_switch = self.page.get_by_role("switch", name="eye eye-invisible").first
         visibility_switch.wait_for(state="visible", timeout=10000)
         visibility_switch.click()
         logger.debug("  ✓ Visibility toggled")
@@ -784,6 +824,7 @@ class FoodAmigoAutomation:
         self.page.wait_for_timeout(600)
 
         logger.debug("  Clicking edit button for customizable content...")
+        # FIXED: Use proven working selector directly (no wasted timeout attempts)
         edit_btn = self.page.get_by_role("button", name="edit").nth(4)
         edit_btn.wait_for(state="visible", timeout=10000)
         edit_btn.click()
@@ -832,6 +873,18 @@ class FoodAmigoAutomation:
 
         logger.info("✓ Customizable section added")
 
+        # *** CRITICAL FIX: Extra stabilization for next section ***
+        logger.debug("  Stabilizing UI state after Customizable save...")
+        self.page.wait_for_timeout(800)  # Extra wait for animations/notifications
+        self._dismiss_blocking_overlays()  # Clear any success toasts
+
+        # Verify page is still interactive
+        try:
+            self.page.evaluate("() => document.title")
+            logger.debug("  ✓ UI state stable, ready for next section")
+        except:
+            logger.warning("  Page responsiveness check failed, but continuing...")
+
     def _add_faq_section(self, data: SEOPageData):
         """
         Add FAQ section and populate with questions/answers.
@@ -864,7 +917,8 @@ class FoodAmigoAutomation:
             self.page.wait_for_timeout(800)
 
             logger.debug("  Clicking plus button in Elements...")
-            elements_plus = self.page.get_by_label("Elements").get_by_role("button", name="plus")
+            # FIXED: Use .first to avoid strict mode violation (32 plus buttons in DOM!)
+            elements_plus = self.page.get_by_label("Elements").get_by_role("button", name="plus").first
             elements_plus.wait_for(state="visible", timeout=10000)
             elements_plus.click()
             logger.debug("  ✓ Elements plus clicked")
@@ -872,41 +926,41 @@ class FoodAmigoAutomation:
             self.page.wait_for_timeout(800)
 
             logger.debug("  Toggling FAQ visibility switch...")
-            faq_switch = self.page.get_by_role("button", name="appstore FAQ eye eye-").get_by_role("switch")
-            faq_switch.wait_for(state="visible", timeout=10000)
-            faq_switch.click()
+            # FIXED: Use proven working selector directly (no wasted timeout attempts)
+            visibility_switch = self.page.get_by_role("switch", name="eye eye-invisible").nth(1)
+            visibility_switch.wait_for(state="visible", timeout=10000)
+            visibility_switch.click()
             logger.debug("  ✓ Visibility toggled")
 
             self.page.wait_for_timeout(700)
 
             logger.debug("  Clicking edit button for FAQ...")
+            # FIXED: Use proven working selector directly (no wasted timeout attempts)
             edit_btn = self.page.get_by_role("button", name="edit", exact=True).nth(3)
             edit_btn.wait_for(state="visible", timeout=10000)
             edit_btn.click()
             logger.debug("  ✓ Edit opened")
 
-            self.page.wait_for_timeout(800)
+            # *** CRITICAL FIX: Wait for drawer to be fully visible ***
+            logger.debug("  Waiting for FAQ drawer to render...")
+            drawer = self.page.locator(".ant-drawer-content").first
+            drawer.wait_for(state="visible", timeout=10000)
+            logger.debug("  ✓ Drawer container visible")
+
+            # Wait for drawer content to fully load (increased from 1500ms)
+            self.page.wait_for_timeout(2000)  # INCREASED: Give extra time for tabs to render
+
+            # Clear any overlays that might be blocking
+            self._dismiss_blocking_overlays()
+
+            logger.debug("  ✓ Drawer fully rendered and ready")
 
             logger.debug("  Clicking 'FAQ Items' tab...")
-            try:
-                # Try standard role selector first
-                faq_items_tab = self.page.get_by_role("tab", name="FAQ Items")
-                faq_items_tab.wait_for(state="visible", timeout=10000)
-                faq_items_tab.click()
-                logger.debug("  ✓ FAQ Items tab opened")
-            except Exception as tab_error:
-                logger.warning(f"  FAQ Items tab via role failed: {tab_error}")
-                logger.debug("  Trying fallback tab selector...")
-                # Fallback: Use text selector with longer wait
-                try:
-                    self.page.wait_for_timeout(2000)  # Extra wait after modal issues
-                    faq_tab_fallback = self.page.locator("text=FAQ Items").first
-                    faq_tab_fallback.wait_for(state="visible", timeout=10000)
-                    faq_tab_fallback.click()
-                    logger.debug("  ✓ FAQ Items tab opened (via fallback)")
-                except Exception as fallback_error:
-                    logger.error(f"  FAQ Items tab fallback also failed: {fallback_error}")
-                    raise Exception("Could not open FAQ Items tab")
+            # Now the tab will be available - no need for complex fallbacks
+            faq_items_tab = self.page.get_by_role("tab", name="FAQ Items")
+            faq_items_tab.wait_for(state="visible", timeout=10000)
+            faq_items_tab.click()
+            logger.debug("  ✓ FAQ Items tab opened")
 
             self.page.wait_for_timeout(800)
             self._dismiss_blocking_overlays()

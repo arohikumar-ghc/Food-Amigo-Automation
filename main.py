@@ -88,41 +88,36 @@ def process_single_file(doc_path: str, config: AutomationConfig) -> dict:
 
                     logger.info(f"Creating SEO page {page_num}...")
 
-                    # Track if page creation was partial
-                    page_success = True
-                    page_partial = False
+                    # create_seo_page now returns status: "success", "partial", or "failed"
+                    status = automation.create_seo_page(page_data, page_num=page_num)
 
-                    try:
-                        automation.create_seo_page(page_data, page_num=page_num)
-                    except Exception as e:
-                        # Check if it's a partial failure (some sections created)
-                        error_msg = str(e).lower()
-                        if "faq" in error_msg or "customizable" in error_msg:
-                            page_partial = True
-                            logger.warning(f"Page {page_num} partially created: {e}")
-                        else:
-                            page_success = False
-                            raise
-
-                    if page_success:
-                        if page_partial:
-                            logger.info(f"PARTIAL SUCCESS: Page {page_num} created with some sections incomplete - {page_data.page_name}")
-                            partial_count += 1
-                            results.append({
-                                "page_name": page_data.page_name,
-                                "success": True,
-                                "partial": True,
-                                "error": "Some sections incomplete (see logs)"
-                            })
-                        else:
-                            logger.info(f"SUCCESS: Page {page_num} created - {page_data.page_name}")
-                            success_count += 1
-                            results.append({
-                                "page_name": page_data.page_name,
-                                "success": True,
-                                "partial": False,
-                                "error": None
-                            })
+                    if status == "success":
+                        logger.info(f"SUCCESS: Page {page_num} created - {page_data.page_name}")
+                        success_count += 1
+                        results.append({
+                            "page_name": page_data.page_name,
+                            "success": True,
+                            "partial": False,
+                            "error": None
+                        })
+                    elif status == "partial":
+                        logger.warning(f"PARTIAL SUCCESS: Page {page_num} created with some sections incomplete - {page_data.page_name}")
+                        partial_count += 1
+                        results.append({
+                            "page_name": page_data.page_name,
+                            "success": True,
+                            "partial": True,
+                            "error": "Some sections incomplete (see logs)"
+                        })
+                    else:  # "failed"
+                        logger.error(f"FAILED: Page {page_num} - {page_data.page_name}")
+                        failed_count += 1
+                        results.append({
+                            "page_name": page_data.page_name,
+                            "success": False,
+                            "partial": False,
+                            "error": "Page creation failed (see logs)"
+                        })
 
                 except Exception as e:
                     logger.error(f"FAILED: Page {page_num} - {page_data.page_name}: {e}", exc_info=True)
