@@ -194,9 +194,17 @@ class DataValidator:
             logger.info(f"  Images: {result.image_count}")
             if result.warnings:
                 logger.warning(f"  Warnings: {len(result.warnings)}")
+                for warning in result.warnings:
+                    logger.warning(f"    - {warning}")
         else:
             logger.error(f"✗ VALIDATION FAILED")
             logger.error(f"  Errors: {len(result.errors)}")
+            for error in result.errors:
+                logger.error(f"    • {error}")
+            if result.warnings:
+                logger.warning(f"  Warnings: {len(result.warnings)}")
+                for warning in result.warnings:
+                    logger.warning(f"    - {warning}")
 
         return result
 
@@ -238,6 +246,10 @@ class DataValidator:
             logger.warning(f"\nFailed restaurants:")
             for result in failed:
                 logger.warning(f"  - {result.restaurant_name}: {len(result.errors)} errors")
+                for error in result.errors[:3]:  # Show first 3 errors
+                    logger.warning(f"      • {error}")
+                if len(result.errors) > 3:
+                    logger.warning(f"      ... and {len(result.errors) - 3} more")
 
         return results
 
