@@ -374,14 +374,29 @@ class BatchAutomation:
 # Main entry point
 if __name__ == "__main__":
     import argparse
+    import os
+    from dotenv import load_dotenv
+
+    # Load .env file
+    load_dotenv()
 
     parser = argparse.ArgumentParser(description="Food Amigo Batch SEO Automation")
-    parser.add_argument("--sheet-url", required=True, help="Google Sheet URL")
+    parser.add_argument("--sheet-url", help="Google Sheet URL (or set GOOGLE_SHEET_URL in .env)")
     parser.add_argument("--validate-only", action="store_true", help="Only validate data, don't run automation")
     parser.add_argument("--credentials", default="credentials.json", help="Path to Google credentials JSON")
     parser.add_argument("--token", default="token.json", help="Path to token cache")
 
     args = parser.parse_args()
+
+    # Get sheet URL from command line OR .env file
+    sheet_url = args.sheet_url or os.getenv("GOOGLE_SHEET_URL")
+
+    if not sheet_url:
+        logger.error("No Google Sheet URL provided!")
+        logger.error("Either:")
+        logger.error("  1. Use: python batch_automation.py --sheet-url \"YOUR_SHEET_URL\"")
+        logger.error("  2. Or add GOOGLE_SHEET_URL=... to your .env file")
+        sys.exit(1)
 
     # Load Food Amigo config from .env
     try:
@@ -393,7 +408,7 @@ if __name__ == "__main__":
 
     # Run batch automation
     batch = BatchAutomation(
-        spreadsheet_url=args.sheet_url,
+        spreadsheet_url=sheet_url,
         credentials_file=args.credentials,
         token_file=args.token
     )
