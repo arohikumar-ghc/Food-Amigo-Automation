@@ -9,6 +9,7 @@ Main workflow:
 """
 import logging
 import sys
+import io
 from pathlib import Path
 from typing import List, Dict
 from datetime import datetime
@@ -23,12 +24,17 @@ from models import SEOPageData
 
 
 # Setup logging
+# Force UTF-8 encoding for console output to handle Unicode characters
+import io
+console_handler = logging.StreamHandler(
+    io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
+)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('logs/batch_automation.log'),
-        logging.StreamHandler(sys.stdout)
+        logging.FileHandler('logs/batch_automation.log', encoding='utf-8'),
+        console_handler
     ]
 )
 

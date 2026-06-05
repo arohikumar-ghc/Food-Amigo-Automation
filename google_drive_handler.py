@@ -210,6 +210,7 @@ def extract_folder_id(folder_url: str) -> str:
 def find_image_case_insensitive(filename: str, image_lookup: Dict[str, Path]) -> Optional[Path]:
     """
     Find image in lookup dictionary with case-insensitive matching.
+    Also handles extension mismatches (e.g., .jpg vs .png).
 
     Args:
         filename: Image filename from document (e.g., "001-Butter-Chicken.jpg")
@@ -219,7 +220,20 @@ def find_image_case_insensitive(filename: str, image_lookup: Dict[str, Path]) ->
         Local file path if found, None otherwise
     """
     key = filename.lower()
-    return image_lookup.get(key)
+
+    # Try exact match first
+    if key in image_lookup:
+        return image_lookup[key]
+
+    # Try matching without extension (handles .jpg vs .png mismatches)
+    name_without_ext = key.rsplit('.', 1)[0] if '.' in key else key
+
+    for lookup_filename, path in image_lookup.items():
+        lookup_name_without_ext = lookup_filename.rsplit('.', 1)[0] if '.' in lookup_filename else lookup_filename
+        if name_without_ext == lookup_name_without_ext:
+            return path
+
+    return None
 
 
 # Example usage

@@ -873,11 +873,51 @@ class FoodAmigoAutomation:
         self._dismiss_blocking_overlays()
 
         # *** NEW: Select Layout 6 ***
-        # Based on screenshot: Grid of numbered cards (1-9) with radio buttons
-        # Layout 6 has a green checkmark when selected
-        logger.debug("  Selecting Layout 6...")
+        # STEP 1: Click "Layout: 1" area to OPEN the layout selector modal
+        logger.debug("  Opening layout selector...")
+        try:
+            # Strategy 1: Click the div containing h6 "Layout: 1"
+            # This is the clickable area with cursor-pointer class
+            try:
+                logger.debug("    Strategy 1: Click div with h6 'Layout: 1'...")
+                layout_button = self.page.locator('div.cursor-pointer').filter(
+                    has=self.page.locator('h6:text-is("Layout: 1")')
+                ).first
+                layout_button.wait_for(state="visible", timeout=5000)
+                layout_button.click()
+                logger.debug("  ✓ Layout selector opened (strategy 1)")
+                self.page.wait_for_timeout(1000)  # Wait for modal to fully open
+            except Exception as e1:
+                logger.debug(f"    Strategy 1 failed: {e1}")
 
-        # FIRST: Take screenshot for debugging
+                # Strategy 2: Click the parent div containing the arrow icon
+                try:
+                    logger.debug("    Strategy 2: Click parent div with arrow icon...")
+                    layout_div = self.page.locator('div').filter(
+                        has=self.page.locator('h6:text-is("Layout: 1")')
+                    ).filter(
+                        has=self.page.locator('span[aria-label="arrow-right"]')
+                    ).first
+                    layout_div.wait_for(state="visible", timeout=5000)
+                    layout_div.click()
+                    logger.debug("  ✓ Layout selector opened (strategy 2)")
+                    self.page.wait_for_timeout(1000)
+                except Exception as e2:
+                    logger.debug(f"    Strategy 2 failed: {e2}")
+
+                    # Strategy 3: Click the h6 element directly
+                    logger.debug("    Strategy 3: Click h6 'Layout: 1' directly...")
+                    layout_h6 = self.page.locator('h6:text-is("Layout: 1")').first
+                    layout_h6.wait_for(state="visible", timeout=5000)
+                    layout_h6.click()
+                    logger.debug("  ✓ Layout selector opened (strategy 3)")
+                    self.page.wait_for_timeout(1000)
+
+        except Exception as e:
+            logger.warning(f"  Could not open layout selector: {e}")
+            logger.warning("  Will try to proceed anyway...")
+
+        # STEP 2: Take screenshot for debugging
         try:
             screenshot_path = Path("logs") / "layout_selection.png"
             screenshot_path.parent.mkdir(exist_ok=True)
@@ -886,30 +926,56 @@ class FoodAmigoAutomation:
         except:
             pass
 
+        # STEP 3: Select Layout 6 from the grid
+        logger.debug("  Selecting Layout 6...")
         try:
-            # ULTRA SIMPLE: Just click on "6" text in the layout grid area
-            # The cards themselves should be clickable
-            logger.debug("    Trying: Click element with '6' text (card itself)...")
-
             # Wait for layout grid to be visible
-            self.page.wait_for_timeout(1000)
+            self.page.wait_for_timeout(500)
 
-            # Find the card/element with "6" - but NOT in Elements panel (left side)
-            # Look specifically in the right panel where layout previews are shown
+            # Strategy 1: Click the image with src containing "customizable/6.png"
+            # This is the most reliable - images are unique per layout
             try:
-                # Try clicking the number "6" itself
-                layout_6_number = self.page.locator("text=6").nth(5)  # 6th occurrence of "6" text
-                layout_6_number.click(timeout=5000)
-                logger.debug("  ✓ Clicked on '6' text (nth approach)")
-            except:
-                # Fallback: Click anything clickable near "6"
-                logger.debug("    Fallback: Looking for clickable parent of '6'...")
-                layout_6_area = self.page.locator("div, button, label").filter(has_text="6").nth(5)
-                layout_6_area.click(timeout=5000)
-                logger.debug("  ✓ Clicked layout 6 area")
+                logger.debug("    Strategy 1: Click image with src='customizable/6.png'...")
+                layout_6_image = self.page.locator('img[src*="customizable/6.png"]')
+                layout_6_image.wait_for(state="visible", timeout=5000)
+                layout_6_image.click()
+                logger.debug("  ✓ Layout 6 selected (clicked image)")
+                self.page.wait_for_timeout(800)
 
-            self.page.wait_for_timeout(800)
-            logger.debug("  ✓ Layout 6 selected")
+            except Exception as e1:
+                logger.debug(f"    Strategy 1 failed: {e1}")
+
+                # Strategy 2: Click the card containing h6 with text "6" and the image
+                try:
+                    logger.debug("    Strategy 2: Click card containing h6='6' and image...")
+                    # Find the parent div that contains both h6 and the image
+                    layout_6_card = self.page.locator('div').filter(
+                        has=self.page.locator('h6:text-is("6")')
+                    ).filter(
+                        has=self.page.locator('img[src*="customizable/6.png"]')
+                    ).first
+                    layout_6_card.wait_for(state="visible", timeout=5000)
+                    layout_6_card.click()
+                    logger.debug("  ✓ Layout 6 selected (clicked card)")
+                    self.page.wait_for_timeout(800)
+
+                except Exception as e2:
+                    logger.debug(f"    Strategy 2 failed: {e2}")
+
+                    # Strategy 3: Click the h6 element itself
+                    try:
+                        logger.debug("    Strategy 3: Click h6 element with text '6'...")
+                        # Find h6 with exact text "6" (not 16, 26, etc)
+                        layout_6_h6 = self.page.locator('h6:text-is("6")')
+                        layout_6_h6.wait_for(state="visible", timeout=5000)
+                        layout_6_h6.click()
+                        logger.debug("  ✓ Layout 6 selected (clicked h6)")
+                        self.page.wait_for_timeout(800)
+
+                    except Exception as e3:
+                        logger.debug(f"    Strategy 3 failed: {e3}")
+                        # All strategies failed
+                        raise Exception(f"All strategies failed. Last error: {e3}")
 
         except Exception as layout_error:
             logger.warning(f"  Could not select Layout 6: {layout_error}")
@@ -934,8 +1000,8 @@ class FoodAmigoAutomation:
         desc_field.fill(data.description)
         logger.debug("  ✓ Description filled")
 
-        # IMAGE UPLOAD DISABLED - Skipping to save
-        # All image upload logic removed to prevent modal/drawer blocking issues
+        # IMAGE UPLOAD DISABLED - Layout 6 selected but image upload skipped
+        # TODO: Implement image upload in future version
 
         # Save - ensure no overlays block the button
         logger.debug("  Ensuring no blocking overlays before Save...")

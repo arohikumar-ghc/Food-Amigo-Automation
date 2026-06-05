@@ -10,6 +10,7 @@ Use this if you prefer to keep using Excel files instead of Google Docs.
 """
 import logging
 import sys
+import io
 from pathlib import Path
 from typing import List, Dict
 from datetime import datetime
@@ -22,12 +23,16 @@ from parser import parse_seo_document_all  # Use your existing Excel parser
 
 
 # Setup logging
+# Force UTF-8 encoding for console output to handle Unicode characters
+console_handler = logging.StreamHandler(
+    io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', line_buffering=True)
+)
 logging.basicConfig(
     level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
-        logging.FileHandler('logs/batch_automation_excel.log'),
-        logging.StreamHandler(sys.stdout)
+        logging.FileHandler('logs/batch_automation_excel.log', encoding='utf-8'),
+        console_handler
     ]
 )
 
