@@ -843,13 +843,12 @@ class FoodAmigoAutomation:
 
         self.page.wait_for_timeout(700)
 
-        logger.debug("  Clicking add button for customizable block...")
-        # FIXED: Use .first to avoid strict mode violation (32 plus buttons in DOM!)
-        # Click the FIRST visible plus button within the Elements panel
-        elements_plus = self.page.get_by_label("Elements").get_by_role("button", name="plus").first
-        elements_plus.wait_for(state="visible", timeout=10000)
-        elements_plus.click()
-        logger.debug("  ✓ Block added")
+        logger.debug("  Clicking Layout 6 card to add customizable block...")
+        # CORRECT SELECTOR from Playwright recording: nth-child(6) = Layout 6
+        layout_6_button = self.page.locator("div:nth-child(6) > .w-full.flex > .ant-btn").first
+        layout_6_button.wait_for(state="visible", timeout=10000)
+        layout_6_button.click()
+        logger.debug("  ✓ Layout 6 selected and block added")
 
         self.page.wait_for_timeout(700)
 
@@ -872,115 +871,8 @@ class FoodAmigoAutomation:
         self.page.wait_for_timeout(700)
         self._dismiss_blocking_overlays()
 
-        # *** NEW: Select Layout 6 ***
-        # STEP 1: Click "Layout: 1" area to OPEN the layout selector modal
-        logger.debug("  Opening layout selector...")
-        try:
-            # Strategy 1: Click the div containing h6 "Layout: 1"
-            # This is the clickable area with cursor-pointer class
-            try:
-                logger.debug("    Strategy 1: Click div with h6 'Layout: 1'...")
-                layout_button = self.page.locator('div.cursor-pointer').filter(
-                    has=self.page.locator('h6:text-is("Layout: 1")')
-                ).first
-                layout_button.wait_for(state="visible", timeout=5000)
-                layout_button.click()
-                logger.debug("  ✓ Layout selector opened (strategy 1)")
-                self.page.wait_for_timeout(1000)  # Wait for modal to fully open
-            except Exception as e1:
-                logger.debug(f"    Strategy 1 failed: {e1}")
-
-                # Strategy 2: Click the parent div containing the arrow icon
-                try:
-                    logger.debug("    Strategy 2: Click parent div with arrow icon...")
-                    layout_div = self.page.locator('div').filter(
-                        has=self.page.locator('h6:text-is("Layout: 1")')
-                    ).filter(
-                        has=self.page.locator('span[aria-label="arrow-right"]')
-                    ).first
-                    layout_div.wait_for(state="visible", timeout=5000)
-                    layout_div.click()
-                    logger.debug("  ✓ Layout selector opened (strategy 2)")
-                    self.page.wait_for_timeout(1000)
-                except Exception as e2:
-                    logger.debug(f"    Strategy 2 failed: {e2}")
-
-                    # Strategy 3: Click the h6 element directly
-                    logger.debug("    Strategy 3: Click h6 'Layout: 1' directly...")
-                    layout_h6 = self.page.locator('h6:text-is("Layout: 1")').first
-                    layout_h6.wait_for(state="visible", timeout=5000)
-                    layout_h6.click()
-                    logger.debug("  ✓ Layout selector opened (strategy 3)")
-                    self.page.wait_for_timeout(1000)
-
-        except Exception as e:
-            logger.warning(f"  Could not open layout selector: {e}")
-            logger.warning("  Will try to proceed anyway...")
-
-        # STEP 2: Take screenshot for debugging
-        try:
-            screenshot_path = Path("logs") / "layout_selection.png"
-            screenshot_path.parent.mkdir(exist_ok=True)
-            self.page.screenshot(path=str(screenshot_path))
-            logger.info(f"     📸 Layout selector screenshot: {screenshot_path}")
-        except:
-            pass
-
-        # STEP 3: Select Layout 6 from the grid
-        logger.debug("  Selecting Layout 6...")
-        try:
-            # Wait for layout grid to be visible
-            self.page.wait_for_timeout(500)
-
-            # Strategy 1: Click the image with src containing "customizable/6.png"
-            # This is the most reliable - images are unique per layout
-            try:
-                logger.debug("    Strategy 1: Click image with src='customizable/6.png'...")
-                layout_6_image = self.page.locator('img[src*="customizable/6.png"]')
-                layout_6_image.wait_for(state="visible", timeout=5000)
-                layout_6_image.click()
-                logger.debug("  ✓ Layout 6 selected (clicked image)")
-                self.page.wait_for_timeout(800)
-
-            except Exception as e1:
-                logger.debug(f"    Strategy 1 failed: {e1}")
-
-                # Strategy 2: Click the card containing h6 with text "6" and the image
-                try:
-                    logger.debug("    Strategy 2: Click card containing h6='6' and image...")
-                    # Find the parent div that contains both h6 and the image
-                    layout_6_card = self.page.locator('div').filter(
-                        has=self.page.locator('h6:text-is("6")')
-                    ).filter(
-                        has=self.page.locator('img[src*="customizable/6.png"]')
-                    ).first
-                    layout_6_card.wait_for(state="visible", timeout=5000)
-                    layout_6_card.click()
-                    logger.debug("  ✓ Layout 6 selected (clicked card)")
-                    self.page.wait_for_timeout(800)
-
-                except Exception as e2:
-                    logger.debug(f"    Strategy 2 failed: {e2}")
-
-                    # Strategy 3: Click the h6 element itself
-                    try:
-                        logger.debug("    Strategy 3: Click h6 element with text '6'...")
-                        # Find h6 with exact text "6" (not 16, 26, etc)
-                        layout_6_h6 = self.page.locator('h6:text-is("6")')
-                        layout_6_h6.wait_for(state="visible", timeout=5000)
-                        layout_6_h6.click()
-                        logger.debug("  ✓ Layout 6 selected (clicked h6)")
-                        self.page.wait_for_timeout(800)
-
-                    except Exception as e3:
-                        logger.debug(f"    Strategy 3 failed: {e3}")
-                        # All strategies failed
-                        raise Exception(f"All strategies failed. Last error: {e3}")
-
-        except Exception as layout_error:
-            logger.warning(f"  Could not select Layout 6: {layout_error}")
-            logger.warning("  Screenshot saved at logs/layout_selection.png - check manually!")
-            logger.warning("  Continuing with default layout...")
+        # Layout 6 is now selected directly when adding the block (see above)
+        # No need for separate layout selection step!
 
         logger.debug("  Filling Subtitle...")
         subtitle_field = self.page.get_by_role("textbox", name="Subtitle")
@@ -1000,8 +892,42 @@ class FoodAmigoAutomation:
         desc_field.fill(data.description)
         logger.debug("  ✓ Description filled")
 
-        # IMAGE UPLOAD DISABLED - Layout 6 selected but image upload skipped
-        # TODO: Implement image upload in future version
+        # *** IMAGE UPLOAD (from Playwright recording) ***
+        # This uploads the hero image to the customizable section
+        try:
+            logger.debug("  Uploading hero image...")
+
+            # Click "plus Image" button to open media gallery
+            logger.debug("    Clicking 'plus Image' button...")
+            image_button = self.page.get_by_role("button", name="plus Image")
+            image_button.wait_for(state="visible", timeout=5000)
+            image_button.click()
+            logger.debug("    ✓ Media gallery opened")
+
+            self.page.wait_for_timeout(1000)
+
+            # Click the "plus" button on the image card (nth(5) from recording)
+            # This selects the image from the existing media gallery
+            logger.debug("    Selecting image from gallery...")
+            image_select_button = self.page.get_by_role("button", name="plus").nth(5)
+            image_select_button.wait_for(state="visible", timeout=5000)
+            image_select_button.click()
+            logger.debug("    ✓ Image selected")
+
+            self.page.wait_for_timeout(800)
+
+            # Click "Select (1)" to confirm
+            logger.debug("    Confirming selection...")
+            select_button = self.page.get_by_role("button", name="Select (1)")
+            select_button.wait_for(state="visible", timeout=5000)
+            select_button.click()
+            logger.debug("    ✓ Image uploaded")
+
+            self.page.wait_for_timeout(1000)
+
+        except Exception as img_error:
+            logger.warning(f"  Image upload failed: {img_error}")
+            logger.warning("  Continuing without image...")
 
         # Save - ensure no overlays block the button
         logger.debug("  Ensuring no blocking overlays before Save...")
