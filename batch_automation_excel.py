@@ -95,15 +95,17 @@ class BatchAutomationExcel:
 
         logger.info("✓ Setup complete\n")
 
-    def run(self, config: AutomationConfig):
+    def run(self, config: AutomationConfig, validate_only: bool = False):
         """
         Run batch automation.
 
         Args:
             config: AutomationConfig with Food Amigo credentials
+            validate_only: If True, only validate data without running automation
         """
         logger.info("="*70)
         logger.info("BATCH AUTOMATION STARTED (Excel Mode)")
+        logger.info(f"Mode: {'VALIDATE ONLY' if validate_only else 'FULL AUTOMATION'}")
         logger.info("="*70)
 
         # Load restaurants from sheet
@@ -118,6 +120,11 @@ class BatchAutomationExcel:
             return self.stats
 
         logger.info(f"✓ Found {len(pending_restaurants)} pending restaurants\n")
+
+        if validate_only:
+            logger.info("\nValidation-only mode. Stopping here.")
+            logger.info("All data is accessible and valid!")
+            return self.stats
 
         # Process each restaurant
         logger.info("PHASE 2: PROCESSING RESTAURANTS")
@@ -299,6 +306,7 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser(description="Food Amigo Batch Automation (Excel Mode)")
     parser.add_argument("--sheet-url", help="Google Sheet URL (or set GOOGLE_SHEET_URL in .env)")
+    parser.add_argument("--validate-only", action="store_true", help="Only validate data, don't run automation")
     parser.add_argument("--credentials", default="credentials.json", help="Google credentials")
     parser.add_argument("--token", default="token.json", help="Token cache")
 
@@ -329,7 +337,7 @@ if __name__ == "__main__":
     )
 
     batch.setup()
-    stats = batch.run(config)
+    stats = batch.run(config, validate_only=args.validate_only)
 
     if stats["failed"] > 0:
         sys.exit(1)
