@@ -23,3 +23,6 @@ google-api-python-client==2.100.0
 
 # HTTP requests (for Drive file downloads)
 requests==2.31.0
+
+# Excel file handling (for conversion script)
+openpyxl==3.1.2
