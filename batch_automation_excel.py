@@ -18,7 +18,7 @@ from google_sheet_handler import GoogleSheetHandler, RestaurantData, extract_spr
 from google_drive_handler import GoogleDriveHandler, extract_folder_id, find_image_case_insensitive
 from automation import FoodAmigoAutomation
 from config import AutomationConfig
-from parser import parse_docx  # Use your existing Excel parser
+from parser import parse_seo_document_all  # Use your existing Excel parser
 
 
 # Setup logging
@@ -199,7 +199,7 @@ class BatchAutomationExcel:
             logger.info(f"→ Parsing Excel file: {excel_path}")
 
             # Parse Excel file using existing parser
-            pages = parse_docx(excel_path)  # Your existing parser
+            pages = parse_seo_document_all(excel_path)  # Your existing parser
             result["total_pages"] = len(pages)
 
             logger.info(f"  ✓ Parsed {len(pages)} pages")
