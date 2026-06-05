@@ -1,0 +1,153 @@
+====================================================================================================
+FOOD AMIGO SEO PAGES - GOOGLE DOC TEMPLATE
+====================================================================================================
+
+Instructions:
+1. Copy this entire template into a new Google Doc
+2. Fill in your restaurant's page data
+3. Keep the delimiters exactly as shown: === PAGE START === and === PAGE END ===
+4. Add as many pages as needed by copying the page block
+5. Make sure all required fields are filled
+6. Share the document with your Google account
+
+====================================================================================================
+
+=== PAGE START ===
+Page Name: Butter Chicken
+Href: /butter-chicken
+SEO Title: Order Butter Chicken Online | YOUR RESTAURANT NAME
+SEO Description: Creamy butter chicken with aromatic spices. Made with tender chicken pieces in a rich tomato-based sauce. Order now for delivery or pickup.
+Social Title: Order Butter Chicken Online | YOUR RESTAURANT NAME
+Social Description: Creamy butter chicken with aromatic spices. Made with tender chicken pieces in a rich tomato-based sauce. Order now for delivery or pickup.
+Image: 001-butter-chicken.jpg
+Subtitle: Authentic Indian Cuisine
+Title: Butter Chicken
+Description: Our signature butter chicken features tender chicken pieces simmered in a rich, creamy tomato-based sauce with aromatic spices. This classic North Indian dish is perfect with naan bread or basmati rice.
+FAQ Question 1: Is butter chicken spicy?
+FAQ Answer 1: Our butter chicken has a mild to medium spice level, making it suitable for most palates. If you prefer less spice, please mention it in your order notes.
+FAQ Question 2: Does it contain nuts?
+FAQ Answer 2: Yes, our butter chicken sauce contains cashew paste for richness and creaminess. Please inform us of any nut allergies.
+FAQ Question 3: What sides go well with butter chicken?
+FAQ Answer 3: Butter chicken pairs perfectly with garlic naan, plain naan, or steamed basmati rice. We also recommend adding a side of raita for cooling contrast.
+=== PAGE END ===
+
+=== PAGE START ===
+Page Name: Garlic Naan
+Href: /garlic-naan
+SEO Title: Fresh Garlic Naan Bread | YOUR RESTAURANT NAME
+SEO Description: Soft and fluffy garlic naan bread baked fresh to order in our traditional tandoor oven. Perfect accompaniment to any curry dish.
+Social Title: Fresh Garlic Naan Bread | YOUR RESTAURANT NAME
+Social Description: Soft and fluffy garlic naan bread baked fresh to order in our traditional tandoor oven. Perfect accompaniment to any curry dish.
+Image: 002-garlic-naan.jpg
+Subtitle: Authentic Indian Breads
+Title: Garlic Naan
+Description: Hand-stretched naan bread topped with fresh garlic and melted butter, baked to perfection in our traditional tandoor oven. Soft, fluffy, and aromatic - the perfect side for any curry.
+FAQ Question 1: Is the naan vegetarian?
+FAQ Answer 1: Yes, our garlic naan is 100% vegetarian. It contains flour, yogurt, garlic, and butter, with no meat products.
+FAQ Question 2: How many naans per order?
+FAQ Answer 2: Each order contains 2 garlic naans. You can order multiple portions if needed.
+FAQ Question 3: Can I get naan without garlic?
+FAQ Answer 3: Yes, we also offer plain naan without garlic. You can select it from our bread menu.
+=== PAGE END ===
+
+=== PAGE START ===
+Page Name: Paneer Tikka
+Href: /paneer-tikka
+SEO Title: Paneer Tikka - Grilled Indian Cottage Cheese | YOUR RESTAURANT NAME
+SEO Description: Marinated paneer cubes grilled to perfection with bell peppers and onions. Vegetarian appetizer bursting with flavor.
+Social Title: Paneer Tikka - Grilled Indian Cottage Cheese | YOUR RESTAURANT NAME
+Social Description: Marinated paneer cubes grilled to perfection with bell peppers and onions. Vegetarian appetizer bursting with flavor.
+Image: 003-paneer-tikka.jpg
+Subtitle: Vegetarian Appetizers
+Title: Paneer Tikka
+Description: Cubes of fresh Indian cottage cheese marinated in spiced yogurt and grilled with bell peppers and onions. Served with mint chutney. A must-try vegetarian appetizer.
+FAQ Question 1: What is paneer?
+FAQ Answer 1: Paneer is fresh Indian cottage cheese with a mild, milky flavor. It has a firm texture that holds up well when grilled or cooked.
+FAQ Question 2: Is paneer tikka spicy?
+FAQ Answer 2: Paneer tikka has a moderate spice level from the marinade. It's flavorful but not overwhelmingly hot.
+FAQ Question 3: Is this dish vegan?
+FAQ Answer 3: No, paneer tikka is vegetarian but not vegan as it contains dairy (cheese and yogurt). We can prepare vegan alternatives upon request.
+=== PAGE END ===
+
+=== PAGE START ===
+Page Name: Chicken Biryani
+Href: /chicken-biryani
+SEO Title: Authentic Chicken Biryani | YOUR RESTAURANT NAME
+SEO Description: Fragrant basmati rice layered with spiced chicken, caramelized onions, and aromatic spices. Served with raita and curry sauce.
+Social Title: Authentic Chicken Biryani | YOUR RESTAURANT NAME
+Social Description: Fragrant basmati rice layered with spiced chicken, caramelized onions, and aromatic spices. Served with raita and curry sauce.
+Image: 004-chicken-biryani.jpg
+Subtitle: Classic Indian Rice Dishes
+Title: Chicken Biryani
+Description: Aromatic basmati rice layered with marinated chicken pieces, fried onions, fresh herbs, and fragrant spices. Slow-cooked to perfection and served with cooling raita and rich curry sauce.
+FAQ Question 1: What comes with the biryani?
+FAQ Answer 1: Our chicken biryani comes with raita (yogurt sauce) and a side of curry sauce. Some orders also include a boiled egg.
+FAQ Question 2: Is biryani very spicy?
+FAQ Answer 2: Our biryani has a medium spice level with layers of flavor from aromatic spices. It's flavorful without being too hot.
+FAQ Question 3: How large is one portion?
+FAQ Answer 3: One portion of biryani is generous, typically 400-500g, and is usually sufficient for one person with a good appetite.
+=== PAGE END ===
+
+=== PAGE START ===
+Page Name: Samosa
+Href: /samosa
+SEO Title: Crispy Vegetable Samosa | YOUR RESTAURANT NAME
+SEO Description: Golden-fried pastry triangles filled with spiced potatoes and peas. Classic Indian snack served with tamarind and mint chutney.
+Social Title: Crispy Vegetable Samosa | YOUR RESTAURANT NAME
+Social Description: Golden-fried pastry triangles filled with spiced potatoes and peas. Classic Indian snack served with tamarind and mint chutney.
+Image: 005-samosa.jpg
+Subtitle: Popular Indian Snacks
+Title: Samosa
+Description: Crispy, flaky pastry triangles filled with a savory mixture of spiced potatoes, peas, and herbs. Deep-fried to golden perfection and served with tangy tamarind chutney and cooling mint chutney.
+FAQ Question 1: How many samosas per order?
+FAQ Answer 1: Each order contains 2 samosas, served with chutneys.
+FAQ Question 2: Are samosas vegetarian?
+FAQ Answer 2: Yes, our vegetable samosas are 100% vegetarian, filled with potatoes, peas, and spices.
+FAQ Question 3: Can I get samosas as a meal?
+FAQ Answer 3: Samosas are typically served as an appetizer or snack. For a meal, we recommend pairing them with a curry dish and rice or naan.
+=== PAGE END ===
+
+====================================================================================================
+TEMPLATE NOTES
+====================================================================================================
+
+1. COPY THE ENTIRE PAGE BLOCK to add more pages (from === PAGE START === to === PAGE END ===)
+
+2. REQUIRED FIELDS (must be present for each page):
+   - Page Name
+   - Href (must start with /)
+   - SEO Title
+   - SEO Description
+   - Social Title
+   - Social Description
+   - Image (filename with extension)
+   - Subtitle
+   - Title
+   - Description
+   - At least 1 FAQ (Question 1 + Answer 1)
+
+3. MULTIPLE FAQs (add as many as needed):
+   FAQ Question 1: ...
+   FAQ Answer 1: ...
+   FAQ Question 2: ...
+   FAQ Answer 2: ...
+   FAQ Question 3: ...
+   FAQ Answer 3: ...
+   (etc.)
+
+4. IMAGE FILENAMES must match files in your Google Drive folder:
+   - Use format: 001-item-name.jpg
+   - Lowercase with hyphens
+   - No spaces
+
+5. DELIMITERS are exact:
+   - === PAGE START === (with spaces, uppercase)
+   - === PAGE END === (with spaces, uppercase)
+
+6. HREF RULES:
+   - Must start with /
+   - Lowercase
+   - Use hyphens not spaces
+   - Unique (no duplicates)
+
+====================================================================================================

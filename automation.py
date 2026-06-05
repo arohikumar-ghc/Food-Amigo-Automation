@@ -475,21 +475,60 @@ class FoodAmigoAutomation:
             logger.error(f"Dashboard navigation failed critically: {e}")
             raise
 
+    def page_exists(self, page_name: str) -> bool:
+        """
+        Check if a page with the given name already exists.
+
+        This enables idempotent page creation - safe to retry without duplicates.
+
+        Args:
+            page_name: Name of the page to check
+
+        Returns:
+            True if page exists, False otherwise
+        """
+        try:
+            logger.debug(f"Checking if page exists: {page_name}")
+
+            # Look for button with page name (existing pages appear as buttons)
+            page_button = self.page.get_by_role("button", name=page_name, exact=True)
+
+            # Check if button exists and is visible
+            is_visible = page_button.is_visible(timeout=2000)
+
+            if is_visible:
+                logger.info(f"✓ Page already exists: {page_name}")
+                return True
+            else:
+                return False
+
+        except Exception as e:
+            # Timeout or not found = page doesn't exist
+            logger.debug(f"Page does not exist: {page_name}")
+            return False
+
     def create_seo_page(self, data: SEOPageData, page_num: Optional[int] = None):
         """
         Create a new SEO page with provided data.
+
+        IDEMPOTENT: Checks if page already exists before creating.
 
         Args:
             data: SEOPageData containing all page information
             page_num: Page number for image matching (1, 2, 3, etc.)
 
         Returns:
-            str: Status - "success", "partial", or "failed"
+            str: Status - "success", "partial", "failed", or "skipped"
 
         Raises:
             Exception: If critical page creation fails (basic info/SEO)
         """
         logger.info(f"Creating SEO page: {data.page_name}")
+
+        # IDEMPOTENCY CHECK: Skip if page already exists
+        if self.page_exists(data.page_name):
+            logger.info(f"⊙ Page already exists, skipping: {data.page_name}")
+            return "skipped"
 
         # Track section-level success for accurate reporting
         sections_completed = {
@@ -832,6 +871,50 @@ class FoodAmigoAutomation:
 
         self.page.wait_for_timeout(700)
         self._dismiss_blocking_overlays()
+
+        # *** NEW: Select Layout 6 ***
+        # Based on screenshot: Grid of numbered cards (1-9) with radio buttons
+        # Layout 6 has a green checkmark when selected
+        logger.debug("  Selecting Layout 6...")
+
+        # FIRST: Take screenshot for debugging
+        try:
+            screenshot_path = Path("logs") / "layout_selection.png"
+            screenshot_path.parent.mkdir(exist_ok=True)
+            self.page.screenshot(path=str(screenshot_path))
+            logger.info(f"     📸 Layout selector screenshot: {screenshot_path}")
+        except:
+            pass
+
+        try:
+            # ULTRA SIMPLE: Just click on "6" text in the layout grid area
+            # The cards themselves should be clickable
+            logger.debug("    Trying: Click element with '6' text (card itself)...")
+
+            # Wait for layout grid to be visible
+            self.page.wait_for_timeout(1000)
+
+            # Find the card/element with "6" - but NOT in Elements panel (left side)
+            # Look specifically in the right panel where layout previews are shown
+            try:
+                # Try clicking the number "6" itself
+                layout_6_number = self.page.locator("text=6").nth(5)  # 6th occurrence of "6" text
+                layout_6_number.click(timeout=5000)
+                logger.debug("  ✓ Clicked on '6' text (nth approach)")
+            except:
+                # Fallback: Click anything clickable near "6"
+                logger.debug("    Fallback: Looking for clickable parent of '6'...")
+                layout_6_area = self.page.locator("div, button, label").filter(has_text="6").nth(5)
+                layout_6_area.click(timeout=5000)
+                logger.debug("  ✓ Clicked layout 6 area")
+
+            self.page.wait_for_timeout(800)
+            logger.debug("  ✓ Layout 6 selected")
+
+        except Exception as layout_error:
+            logger.warning(f"  Could not select Layout 6: {layout_error}")
+            logger.warning("  Screenshot saved at logs/layout_selection.png - check manually!")
+            logger.warning("  Continuing with default layout...")
 
         logger.debug("  Filling Subtitle...")
         subtitle_field = self.page.get_by_role("textbox", name="Subtitle")
