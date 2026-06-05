@@ -38,15 +38,16 @@ def main():
     # Check if token exists
     if token_path.exists():
         print("⚠ Found existing token.json")
-        print("  This token will be replaced with a new one that has all required scopes.")
+        print("  Replacing with a new one that has all required scopes.")
         print()
-        response = input("  Continue? [y/N]: ").strip().lower()
-        if response != 'y':
-            print("\nAborted.")
-            return 1
+
+        # Delete old backup if it exists
+        backup_path = Path("token.json.bak")
+        if backup_path.exists():
+            backup_path.unlink()
+            print(f"✓ Deleted old backup")
 
         # Backup old token
-        backup_path = Path("token.json.bak")
         token_path.rename(backup_path)
         print(f"✓ Backed up old token to {backup_path}")
         print()
