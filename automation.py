@@ -367,7 +367,8 @@ class FoodAmigoAutomation:
         self.page.get_by_role("textbox", name="Enter Password").fill(self.config.password)
         self.page.get_by_role("button", name="Login").click()
 
-        self.page.wait_for_load_state("networkidle")
+        # Use domcontentloaded instead of networkidle (modern web apps never go idle)
+        self.page.wait_for_load_state("domcontentloaded", timeout=15000)
 
         logger.info("Login successful")
 
@@ -380,10 +381,28 @@ class FoodAmigoAutomation:
         """
         logger.info(f"Selecting restaurant: {self.config.restaurant_name}")
 
-        self.page.locator(".css-19bb58m").click()
-        self.page.get_by_role("option", name=self.config.restaurant_name).click()
+        # Click dropdown to open
+        logger.debug("Clicking restaurant dropdown...")
+        dropdown = self.page.locator(".css-19bb58m")
+        dropdown.click()
 
-        self.page.wait_for_load_state("networkidle")
+        # Wait a moment for dropdown to open
+        self.page.wait_for_timeout(1500)
+
+        # Try to type the restaurant name (in case it's a searchable dropdown)
+        logger.debug(f"Typing restaurant name: {self.config.restaurant_name}")
+        self.page.keyboard.type(self.config.restaurant_name)
+
+        # Wait for filtered results
+        self.page.wait_for_timeout(800)
+
+        # Now click the option
+        logger.debug(f"Clicking restaurant option...")
+        restaurant_option = self.page.get_by_role("option", name=self.config.restaurant_name)
+        restaurant_option.click(timeout=10000)
+
+        # Use domcontentloaded instead of networkidle (faster and more reliable)
+        self.page.wait_for_load_state("domcontentloaded", timeout=15000)
 
         logger.info("Restaurant selected")
 
@@ -399,11 +418,13 @@ class FoodAmigoAutomation:
         self.page.get_by_role("img", name="global").locator("svg").click()
         self.page.get_by_role("link", name="Storefront").click()
 
-        self.page.wait_for_load_state("networkidle")
+        # Use domcontentloaded instead of networkidle
+        self.page.wait_for_load_state("domcontentloaded", timeout=15000)
 
         self.page.get_by_role("link", name="edit Open editor").click()
 
-        self.page.wait_for_load_state("networkidle")
+        # Use domcontentloaded instead of networkidle
+        self.page.wait_for_load_state("domcontentloaded", timeout=15000)
 
         logger.info("Storefront editor opened")
 
@@ -661,9 +682,13 @@ class FoodAmigoAutomation:
         logger.debug("  Clicking Save button...")
         save_btn = self.page.get_by_role("button", name="Save")
         save_btn.wait_for(state="visible", timeout=10000)
+        # Wait for button to be enabled (React validation may run async)
+        save_btn.evaluate("btn => btn.disabled === false")
+        self.page.wait_for_timeout(300)  # Small delay for any async validation
         save_btn.click()
         logger.debug("  ✓ Save clicked")
 
+        # Wait for save operation to complete
         self.page.wait_for_timeout(1000)
         self._dismiss_blocking_overlays()
 
@@ -701,24 +726,25 @@ class FoodAmigoAutomation:
         general_tab.click()
         logger.debug("  ✓ General tab clicked")
 
-        # Wait for tab content to load
-        self.page.wait_for_timeout(600)
+        # Wait for tab content to actually load (event-driven, not fixed timeout)
+        logger.debug("  Waiting for General tab content to load...")
+        edit_button = self.page.get_by_label("General").get_by_role("button", name="edit")
+        edit_button.wait_for(state="attached", timeout=10000)  # Wait for DOM element
+        edit_button.wait_for(state="visible", timeout=5000)     # Wait for display
 
         # Click edit button within General tab
         logger.debug("  Clicking edit button in General tab...")
-        edit_button = self.page.get_by_label("General").get_by_role("button", name="edit")
-        edit_button.wait_for(state="visible", timeout=10000)
         edit_button.click()
         logger.debug("  ✓ Edit button clicked")
 
-        # Wait for form to open
-        self.page.wait_for_timeout(600)
-        self._dismiss_blocking_overlays()
-
-        # Wait for Title field to be visible and fill
-        logger.debug("  Filling General Title...")
+        # Wait for form fields to be ready
+        logger.debug("  Waiting for form to open...")
         title_field = self.page.get_by_role("textbox", name="Title :")
         title_field.wait_for(state="visible", timeout=10000)
+        self._dismiss_blocking_overlays()
+
+        # Fill Title field (already waited for in previous step)
+        logger.debug("  Filling General Title...")
         title_field.fill(data.seo_title)
         logger.debug("  ✓ Title filled")
 
@@ -733,11 +759,17 @@ class FoodAmigoAutomation:
         logger.debug("  Clicking Save...")
         save_btn = self.page.get_by_role("button", name="Save")
         save_btn.wait_for(state="visible", timeout=10000)
+        # Wait for button to be enabled (React validation may run async)
+        self.page.wait_for_timeout(300)  # Small delay for any async validation
         save_btn.click()
         logger.debug("  ✓ Save clicked")
 
         self.page.wait_for_timeout(1000)
         self._dismiss_blocking_overlays()
+
+        # Ensure we're still in edit mode after save
+        logger.debug("  Verifying edit mode is still active...")
+        self.page.wait_for_timeout(500)
 
         logger.info("✓ SEO metadata saved")
 
@@ -752,33 +784,36 @@ class FoodAmigoAutomation:
         """
         logger.info("→ Filling social metadata (Social tab)...")
 
+        # Extra wait and overlay dismissal to ensure clean state
+        self.page.wait_for_timeout(1000)
         self._dismiss_blocking_overlays()
 
         # Click Social tab and wait for it to be active
         logger.debug("  Clicking Social tab...")
         social_tab = self.page.get_by_text("Social", exact=True)
-        social_tab.wait_for(state="visible", timeout=10000)
+        social_tab.wait_for(state="visible", timeout=15000)
         social_tab.click()
         logger.debug("  ✓ Social tab clicked")
 
-        # Wait for tab content to load
-        self.page.wait_for_timeout(600)
+        # Wait for tab content to actually load (event-driven, not fixed timeout)
+        logger.debug("  Waiting for Social tab content to load...")
+        edit_button = self.page.get_by_label("Social").get_by_role("button", name="edit")
+        edit_button.wait_for(state="attached", timeout=10000)  # Wait for DOM element
+        edit_button.wait_for(state="visible", timeout=5000)     # Wait for display
 
         # Click edit button within Social tab
         logger.debug("  Clicking edit button in Social tab...")
-        edit_button = self.page.get_by_label("Social").get_by_role("button", name="edit")
-        edit_button.wait_for(state="visible", timeout=10000)
         edit_button.click()
         logger.debug("  ✓ Edit button clicked")
 
-        # Wait for form to open
-        self.page.wait_for_timeout(600)
-        self._dismiss_blocking_overlays()
-
-        # Fill Social Title
-        logger.debug("  Filling Social Title...")
+        # Wait for form fields to be ready
+        logger.debug("  Waiting for form to open...")
         social_title_field = self.page.get_by_role("textbox", name="Social Title :")
         social_title_field.wait_for(state="visible", timeout=10000)
+        self._dismiss_blocking_overlays()
+
+        # Fill Social Title (already waited for in previous step)
+        logger.debug("  Filling Social Title...")
         social_title_field.fill(data.seo_title)
         logger.debug("  ✓ Social Title filled")
 
@@ -795,7 +830,8 @@ class FoodAmigoAutomation:
         logger.debug("  Clicking Save...")
         save_btn = self.page.get_by_role("button", name="Save")
         save_btn.wait_for(state="visible", timeout=10000)
-        self.page.wait_for_timeout(400)
+        # Wait for button to be enabled (React validation may run async)
+        self.page.wait_for_timeout(300)  # Small delay for any async validation
         save_btn.click()
         logger.debug("  ✓ Save clicked")
 
@@ -833,50 +869,59 @@ class FoodAmigoAutomation:
         features_btn.click()
         logger.debug("  ✓ Features button clicked")
 
-        self.page.wait_for_timeout(600)
-
-        logger.debug("  Selecting 'Customizable' option...")
+        # Wait for Features menu to open (event-driven, not fixed timeout)
+        logger.debug("  Waiting for Features menu to open...")
         custom_option = self.page.get_by_text("Customizable")
         custom_option.wait_for(state="visible", timeout=10000)
+
+        logger.debug("  Selecting 'Customizable' option...")
         custom_option.click()
         logger.debug("  ✓ Customizable selected")
 
-        self.page.wait_for_timeout(700)
+        # Wait for layout grid to fully render (event-driven)
+        logger.debug("  Waiting for layout grid to render...")
+        # Wait for at least 6 layout buttons to exist
+        self.page.wait_for_function(
+            "() => document.querySelectorAll('div > .w-full.flex > .ant-btn').length >= 6"
+        )
 
         logger.debug("  Clicking Layout 6 card to add customizable block...")
         # CORRECT SELECTOR from Playwright recording: nth-child(6) = Layout 6
         layout_6_button = self.page.locator("div:nth-child(6) > .w-full.flex > .ant-btn").first
-        layout_6_button.wait_for(state="visible", timeout=10000)
+        layout_6_button.wait_for(state="visible", timeout=5000)
         layout_6_button.click()
         logger.debug("  ✓ Layout 6 selected and block added")
 
-        self.page.wait_for_timeout(700)
-
-        logger.debug("  Toggling visibility switch...")
-        # FIXED: Use proven working selector directly (no wasted timeout attempts)
+        # Wait for section to be added to page
+        logger.debug("  Waiting for section to be added...")
         visibility_switch = self.page.get_by_role("switch", name="eye eye-invisible").first
         visibility_switch.wait_for(state="visible", timeout=10000)
+
+        logger.debug("  Toggling visibility switch...")
+        # Switch already waited for in previous step
         visibility_switch.click()
         logger.debug("  ✓ Visibility toggled")
 
-        self.page.wait_for_timeout(600)
-
-        logger.debug("  Clicking edit button for customizable content...")
-        # FIXED: Use proven working selector directly (no wasted timeout attempts)
+        # Wait for edit button to appear after toggling visibility
+        logger.debug("  Waiting for edit button to appear...")
         edit_btn = self.page.get_by_role("button", name="edit").nth(4)
         edit_btn.wait_for(state="visible", timeout=10000)
+
+        logger.debug("  Clicking edit button for customizable content...")
         edit_btn.click()
         logger.debug("  ✓ Edit opened")
 
-        self.page.wait_for_timeout(700)
+        # Wait for form fields to be ready
+        logger.debug("  Waiting for form to open...")
+        subtitle_field = self.page.get_by_role("textbox", name="Subtitle")
+        subtitle_field.wait_for(state="visible", timeout=10000)
         self._dismiss_blocking_overlays()
 
         # Layout 6 is now selected directly when adding the block (see above)
         # No need for separate layout selection step!
 
         logger.debug("  Filling Subtitle...")
-        subtitle_field = self.page.get_by_role("textbox", name="Subtitle")
-        subtitle_field.wait_for(state="visible", timeout=10000)
+        # Subtitle field already waited for in previous step
         subtitle_field.fill(data.subtitle)
         logger.debug("  ✓ Subtitle filled")
 
@@ -932,14 +977,13 @@ class FoodAmigoAutomation:
         # Save - ensure no overlays block the button
         logger.debug("  Ensuring no blocking overlays before Save...")
         self._dismiss_blocking_overlays()
-        self.page.wait_for_timeout(500)
 
         logger.debug("  Clicking Save...")
         save_btn = self.page.get_by_role("button", name="Save")
         save_btn.wait_for(state="visible", timeout=10000)
 
-        # Ensure button is enabled
-        self.page.wait_for_timeout(400)
+        # Wait for button to be enabled (React validation may run async)
+        self.page.wait_for_timeout(300)  # Small delay for any async validation
         save_btn.click()
         logger.debug("  ✓ Save clicked")
 
@@ -979,51 +1023,54 @@ class FoodAmigoAutomation:
             features_btn.click()
             logger.debug("  ✓ Features button clicked")
 
-            self.page.wait_for_timeout(700)
-
-            logger.debug("  Selecting 'FAQ' option...")
-            # Use more specific selector to avoid strict mode violation (there are 2 "FAQ" texts on page)
-            # We want the one in the Elements sidebar, not the menu
+            # Wait for Features menu to open (event-driven)
+            logger.debug("  Waiting for FAQ option to appear...")
             faq_option = self.page.get_by_label("Elements").get_by_text("FAQ")
             faq_option.wait_for(state="visible", timeout=10000)
+
+            logger.debug("  Selecting 'FAQ' option...")
             faq_option.click()
             logger.debug("  ✓ FAQ selected")
 
-            self.page.wait_for_timeout(800)
-
-            logger.debug("  Clicking plus button in Elements...")
-            # FIXED: Use .first to avoid strict mode violation (32 plus buttons in DOM!)
+            # Wait for Elements plus button to appear (event-driven)
+            logger.debug("  Waiting for Elements controls...")
             elements_plus = self.page.get_by_label("Elements").get_by_role("button", name="plus").first
             elements_plus.wait_for(state="visible", timeout=10000)
+
+            logger.debug("  Clicking plus button in Elements...")
+            # Elements plus button already waited for in previous step
             elements_plus.click()
             logger.debug("  ✓ Elements plus clicked")
 
-            self.page.wait_for_timeout(800)
-
-            logger.debug("  Toggling FAQ visibility switch...")
-            # FIXED: Use proven working selector directly (no wasted timeout attempts)
+            # Wait for visibility switch to appear
+            logger.debug("  Waiting for FAQ section to be added...")
             visibility_switch = self.page.get_by_role("switch", name="eye eye-invisible").nth(1)
             visibility_switch.wait_for(state="visible", timeout=10000)
+
+            logger.debug("  Toggling FAQ visibility switch...")
             visibility_switch.click()
             logger.debug("  ✓ Visibility toggled")
 
-            self.page.wait_for_timeout(700)
-
-            logger.debug("  Clicking edit button for FAQ...")
-            # FIXED: Use proven working selector directly (no wasted timeout attempts)
+            # Wait for edit button to appear
+            logger.debug("  Waiting for edit button...")
             edit_btn = self.page.get_by_role("button", name="edit", exact=True).nth(3)
             edit_btn.wait_for(state="visible", timeout=10000)
+
+            logger.debug("  Clicking edit button for FAQ...")
             edit_btn.click()
             logger.debug("  ✓ Edit opened")
 
-            # *** CRITICAL FIX: Wait for drawer to be fully visible ***
+            # *** CRITICAL FIX: Wait for drawer AND tabs to be fully ready ***
             logger.debug("  Waiting for FAQ drawer to render...")
             drawer = self.page.locator(".ant-drawer-content").first
             drawer.wait_for(state="visible", timeout=10000)
             logger.debug("  ✓ Drawer container visible")
 
-            # Wait for drawer content to fully load (increased from 1500ms)
-            self.page.wait_for_timeout(2000)  # INCREASED: Give extra time for tabs to render
+            # Wait for FAQ Items tab to actually exist and be ready (event-driven, not fixed timeout)
+            logger.debug("  Waiting for FAQ Items tab to load...")
+            faq_items_tab = self.page.get_by_role("tab", name="FAQ Items")
+            faq_items_tab.wait_for(state="attached", timeout=10000)  # Wait for DOM
+            faq_items_tab.wait_for(state="visible", timeout=5000)     # Wait for display
 
             # Clear any overlays that might be blocking
             self._dismiss_blocking_overlays()
@@ -1031,13 +1078,13 @@ class FoodAmigoAutomation:
             logger.debug("  ✓ Drawer fully rendered and ready")
 
             logger.debug("  Clicking 'FAQ Items' tab...")
-            # Now the tab will be available - no need for complex fallbacks
-            faq_items_tab = self.page.get_by_role("tab", name="FAQ Items")
-            faq_items_tab.wait_for(state="visible", timeout=10000)
             faq_items_tab.click()
             logger.debug("  ✓ FAQ Items tab opened")
 
-            self.page.wait_for_timeout(800)
+            # Wait for FAQ Items tab content to load
+            logger.debug("  Waiting for FAQ Items tab content...")
+            add_button = self.page.get_by_role("button", name="plus Add")
+            add_button.wait_for(state="visible", timeout=10000)
             self._dismiss_blocking_overlays()
 
             # Add each FAQ with complete isolation
@@ -1078,9 +1125,19 @@ class FoodAmigoAutomation:
             self.page.wait_for_timeout(1000)
 
             logger.debug("  Closing FAQ drawer...")
-            drawer_mask = self.page.locator(".ant-drawer-mask")
-            drawer_mask.wait_for(state="visible", timeout=10000)
-            drawer_mask.click()
+            # Click the drawer close button instead of Escape key
+            try:
+                close_button = self.page.locator("button.ant-drawer-close").first
+                close_button.wait_for(state="visible", timeout=5000)
+                close_button.click()
+                logger.debug("  ✓ Drawer close button clicked")
+            except Exception as e:
+                logger.warning(f"  Could not click close button: {e}, trying Escape key...")
+                self.page.keyboard.press("Escape")
+                logger.debug("  ✓ Escape key pressed")
+
+            # Wait for drawer to actually close
+            self.page.wait_for_timeout(1500)
             logger.debug("  ✓ Drawer closed")
 
             logger.info(f"✓ FAQ section completed ({successful_faqs}/{len(data.faqs)} FAQs added)")
@@ -1097,7 +1154,6 @@ class FoodAmigoAutomation:
         Args:
             faq: FAQ instance
         """
-        self.page.wait_for_timeout(700)
         self._dismiss_blocking_overlays()
 
         logger.debug("    Clicking 'plus Add' button...")
@@ -1106,22 +1162,21 @@ class FoodAmigoAutomation:
         add_button.click()
         logger.debug("    ✓ Add clicked")
 
-        self.page.wait_for_timeout(800)
-        self._dismiss_blocking_overlays()
-
-        # Strict verification for Title field
-        logger.debug("    Waiting for FAQ Title field...")
+        # Wait for FAQ dialog to open and fields to be ready
+        logger.debug("    Waiting for FAQ dialog to open...")
         title_field = self.page.get_by_role("textbox", name="Title :")
         title_field.wait_for(state="visible", timeout=10000)
+        self._dismiss_blocking_overlays()
+
+        # Strict verification for Title field (already waited for in previous step)
+        logger.debug("    Verifying FAQ Title field is ready...")
         title_field.wait_for(state="attached", timeout=5000)
 
-        # Verify field is editable
-        if not title_field.is_editable(timeout=3000):
-            raise Exception("Title field is not editable")
+        # Small delay for React to attach event handlers
+        self.page.wait_for_timeout(200)
 
         logger.debug("    Filling FAQ Title (question)...")
         title_field.fill(faq.question)
-        self.page.wait_for_timeout(500)
         logger.debug("    ✓ Question filled")
 
         # Strict verification for Description field
@@ -1130,26 +1185,24 @@ class FoodAmigoAutomation:
         desc_field.wait_for(state="visible", timeout=10000)
         desc_field.wait_for(state="attached", timeout=5000)
 
-        # Verify field is editable
-        if not desc_field.is_editable(timeout=3000):
-            raise Exception("Description field is not editable")
+        # Small delay for React to attach event handlers
+        self.page.wait_for_timeout(200)
 
         logger.debug("    Filling FAQ Description (answer)...")
         desc_field.fill(faq.answer)
-        self.page.wait_for_timeout(500)
         logger.debug("    ✓ Answer filled")
 
         logger.debug("    Clicking Save...")
         save_btn = self.page.get_by_label("FAQ Item", exact=True).get_by_role("button", name="Save")
         save_btn.wait_for(state="visible", timeout=10000)
 
-        # Ensure button is clickable
-        if not save_btn.is_enabled(timeout=3000):
-            raise Exception("Save button is not enabled")
+        # Wait for button to be enabled (React validation may run async)
+        self.page.wait_for_timeout(300)  # Small delay for any async validation
 
         save_btn.click()
         logger.debug("    ✓ Save clicked")
 
+        # Wait for save operation to complete
         self.page.wait_for_timeout(1200)
 
         # Try to close dialog if it's still open

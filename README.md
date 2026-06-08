@@ -289,3 +289,7 @@ cd "C:\Users\Arohi\Desktop\Food Amigo Automation"
 python main.py "seo_files/hyw to india new.docx"
 
 python restore_backup.py
+
+python batch_automation.py
+
+python regenerate_token.py
