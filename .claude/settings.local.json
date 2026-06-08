@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(python *)"
+      "Bash(python *)",
+      "Bash(git add *)",
+      "Bash(git commit -m 'Add support for Google Sheet URL in .env file *)"
     ]
   }
 }

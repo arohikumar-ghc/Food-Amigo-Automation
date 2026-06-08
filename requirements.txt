@@ -14,3 +14,15 @@ lxml>=3.1.0
 
 # Type hints (required by python-docx)
 typing_extensions>=4.9.0
+
+# Google APIs (for Sheets and Drive integration)
+google-auth==2.23.0
+google-auth-oauthlib==1.1.0
+google-auth-httplib2==0.1.1
+google-api-python-client==2.100.0
+
+# HTTP requests (for Drive file downloads)
+requests==2.31.0
+
+# Excel file handling (for conversion script)
+openpyxl==3.1.2

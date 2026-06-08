@@ -475,21 +475,60 @@ class FoodAmigoAutomation:
             logger.error(f"Dashboard navigation failed critically: {e}")
             raise
 
+    def page_exists(self, page_name: str) -> bool:
+        """
+        Check if a page with the given name already exists.
+
+        This enables idempotent page creation - safe to retry without duplicates.
+
+        Args:
+            page_name: Name of the page to check
+
+        Returns:
+            True if page exists, False otherwise
+        """
+        try:
+            logger.debug(f"Checking if page exists: {page_name}")
+
+            # Look for button with page name (existing pages appear as buttons)
+            page_button = self.page.get_by_role("button", name=page_name, exact=True)
+
+            # Check if button exists and is visible
+            is_visible = page_button.is_visible(timeout=2000)
+
+            if is_visible:
+                logger.info(f"✓ Page already exists: {page_name}")
+                return True
+            else:
+                return False
+
+        except Exception as e:
+            # Timeout or not found = page doesn't exist
+            logger.debug(f"Page does not exist: {page_name}")
+            return False
+
     def create_seo_page(self, data: SEOPageData, page_num: Optional[int] = None):
         """
         Create a new SEO page with provided data.
+
+        IDEMPOTENT: Checks if page already exists before creating.
 
         Args:
             data: SEOPageData containing all page information
             page_num: Page number for image matching (1, 2, 3, etc.)
 
         Returns:
-            str: Status - "success", "partial", or "failed"
+            str: Status - "success", "partial", "failed", or "skipped"
 
         Raises:
             Exception: If critical page creation fails (basic info/SEO)
         """
         logger.info(f"Creating SEO page: {data.page_name}")
+
+        # IDEMPOTENCY CHECK: Skip if page already exists
+        if self.page_exists(data.page_name):
+            logger.info(f"⊙ Page already exists, skipping: {data.page_name}")
+            return "skipped"
 
         # Track section-level success for accurate reporting
         sections_completed = {
@@ -804,13 +843,12 @@ class FoodAmigoAutomation:
 
         self.page.wait_for_timeout(700)
 
-        logger.debug("  Clicking add button for customizable block...")
-        # FIXED: Use .first to avoid strict mode violation (32 plus buttons in DOM!)
-        # Click the FIRST visible plus button within the Elements panel
-        elements_plus = self.page.get_by_label("Elements").get_by_role("button", name="plus").first
-        elements_plus.wait_for(state="visible", timeout=10000)
-        elements_plus.click()
-        logger.debug("  ✓ Block added")
+        logger.debug("  Clicking Layout 6 card to add customizable block...")
+        # CORRECT SELECTOR from Playwright recording: nth-child(6) = Layout 6
+        layout_6_button = self.page.locator("div:nth-child(6) > .w-full.flex > .ant-btn").first
+        layout_6_button.wait_for(state="visible", timeout=10000)
+        layout_6_button.click()
+        logger.debug("  ✓ Layout 6 selected and block added")
 
         self.page.wait_for_timeout(700)
 
@@ -833,6 +871,9 @@ class FoodAmigoAutomation:
         self.page.wait_for_timeout(700)
         self._dismiss_blocking_overlays()
 
+        # Layout 6 is now selected directly when adding the block (see above)
+        # No need for separate layout selection step!
+
         logger.debug("  Filling Subtitle...")
         subtitle_field = self.page.get_by_role("textbox", name="Subtitle")
         subtitle_field.wait_for(state="visible", timeout=10000)
@@ -851,8 +892,42 @@ class FoodAmigoAutomation:
         desc_field.fill(data.description)
         logger.debug("  ✓ Description filled")
 
-        # IMAGE UPLOAD DISABLED - Skipping to save
-        # All image upload logic removed to prevent modal/drawer blocking issues
+        # *** IMAGE UPLOAD (from Playwright recording) ***
+        # This uploads the hero image to the customizable section
+        try:
+            logger.debug("  Uploading hero image...")
+
+            # Click "plus Image" button to open media gallery
+            logger.debug("    Clicking 'plus Image' button...")
+            image_button = self.page.get_by_role("button", name="plus Image")
+            image_button.wait_for(state="visible", timeout=5000)
+            image_button.click()
+            logger.debug("    ✓ Media gallery opened")
+
+            self.page.wait_for_timeout(1000)
+
+            # Click the "plus" button on the image card (nth(5) from recording)
+            # This selects the image from the existing media gallery
+            logger.debug("    Selecting image from gallery...")
+            image_select_button = self.page.get_by_role("button", name="plus").nth(5)
+            image_select_button.wait_for(state="visible", timeout=5000)
+            image_select_button.click()
+            logger.debug("    ✓ Image selected")
+
+            self.page.wait_for_timeout(800)
+
+            # Click "Select (1)" to confirm
+            logger.debug("    Confirming selection...")
+            select_button = self.page.get_by_role("button", name="Select (1)")
+            select_button.wait_for(state="visible", timeout=5000)
+            select_button.click()
+            logger.debug("    ✓ Image uploaded")
+
+            self.page.wait_for_timeout(1000)
+
+        except Exception as img_error:
+            logger.warning(f"  Image upload failed: {img_error}")
+            logger.warning("  Continuing without image...")
 
         # Save - ensure no overlays block the button
         logger.debug("  Ensuring no blocking overlays before Save...")

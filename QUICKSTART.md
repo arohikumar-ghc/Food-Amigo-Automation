@@ -1,191 +1,140 @@
-# Quick Start Guide
+# 🚀 Food Amigo Batch Automation - Quick Start
 
-## Step 1: Test the Parser
+**Process 100+ restaurants automatically from Google Sheets!**
 
-The parser is fully functional and ready to use. Test it with the sample document:
+---
 
+## ⚡ 5-Minute Setup
+
+### 1. Install Dependencies
 ```bash
-# Activate virtual environment
-.\venv\Scripts\activate
-
-# Run parser demo
-python demo_parser.py
+pip install -r requirements.txt
+playwright install chromium
 ```
 
-You should see structured output showing all extracted fields.
-
-## Step 2: Parse Your Own Documents
-
-Place your .docx files in the `seo_files/` directory and run:
-
+### 2. Run Setup Wizard
 ```bash
-python parser.py "seo_files/your-document.docx"
+python setup_google_apis.py
 ```
 
-## Step 3: Set Up Automation (TODO)
+This will guide you through:
+- ✅ Google API authentication
+- ✅ Creating `.env` file
+- ✅ Verifying credentials
 
-### Current Status
+### 3. Prepare Your Data
 
-✅ **Parser Module**: Complete and tested
-✅ **Data Models**: Complete with validation
-✅ **Configuration System**: Ready
-✅ **Logging & Utils**: Implemented
-🚧 **Automation Module**: Structure ready, needs Playwright selectors
-
-### What's Needed
-
-The `automation.py` file has all methods defined but needs actual Playwright selectors filled in. Look for `# TODO:` comments.
-
-Example sections to complete:
-
-```python
-def login(self):
-    self.page.goto(self.config.base_url)
-    # TODO: Add actual selectors
-    # self.page.fill("input[type='email']", self.config.email)
-    # self.page.fill("input[type='password']", self.config.password)
-    # self.page.click("button[type='submit']")
+#### Create Google Sheet
+```
+| Restaurant Name | Doc Link           | Image Folder       | No. of Pages | Completed | Last Run | Notes |
+| HWY TO INDIA    | [Google Doc URL]   | [Drive Folder URL] | 100          | No        |          |       |
 ```
 
-### How to Find Selectors
+#### Create Google Docs
+- Copy template from `GOOGLE_DOC_TEMPLATE.txt`
+- Fill in your pages using delimiter format
+- Share doc with your Google account
 
-1. Run your existing Playwright recording (test.py)
-2. Open Chrome DevTools (F12)
-3. Use Elements tab to inspect each form field
-4. Copy the selectors into the corresponding methods in automation.py
+#### Upload Images to Drive
+- Create folder per restaurant
+- Name images: `001-item-name.jpg`, `002-item-name.jpg`, etc.
+- Share folder with your Google account
 
-## Step 4: Configure Credentials
+---
 
+## 🎯 Run Automation
+
+### Test with Validation
 ```bash
-# Copy example file
-cp .env.example .env
-
-# Edit .env with your credentials
-# FOODAMIGO_EMAIL=your-email@example.com
-# FOODAMIGO_PASSWORD=your-password
-# FOODAMIGO_RESTAURANT=Your Restaurant Name
+python batch_automation.py \
+  --sheet-url "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit" \
+  --validate-only
 ```
 
-## Step 5: Run Automation
+This checks:
+- ✅ All docs accessible
+- ✅ All images downloadable
+- ✅ Document structure valid
+- ✅ Image references match files
 
-### Single File
-
+### Run Full Automation
 ```bash
-python main.py "seo_files/lamb-vindaloo.docx"
+python batch_automation.py \
+  --sheet-url "https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit"
 ```
 
-### Batch Processing
+### Monitor Progress
+Watch terminal output:
+```
+[1/3] Restaurant: HWY TO INDIA
+  ✓ Validation passed
+  [Page 1/100] Butter Chicken
+    ✓ Page created successfully
+  [Page 2/100] Garlic Naan
+    ⊙ Page already exists, skipped
+  ...
+```
 
+Check `logs/batch_automation.log` for details.
+
+---
+
+## 📖 Full Documentation
+
+- **Setup Guide**: `BATCH_AUTOMATION_GUIDE.md` (comprehensive)
+- **Doc Template**: `GOOGLE_DOC_TEMPLATE.txt` (copy-paste ready)
+- **Implementation**: `IMPLEMENTATION_SUMMARY.md` (technical details)
+
+---
+
+## ✨ Key Features
+
+✅ **Scalable**: Process 100+ restaurants  
+✅ **Safe**: Idempotent (no duplicates on retry)  
+✅ **Smart**: Pre-validation catches errors early  
+✅ **Robust**: Continues despite page-level failures  
+✅ **Tracked**: Auto-updates Google Sheet with status  
+
+---
+
+## 🆘 Common Issues
+
+### "Authentication failed"
 ```bash
-python main.py
+rm token.json
+python setup_google_apis.py
 ```
 
-This will process all .docx files in `seo_files/` directory.
+### "Restaurant not found"
+- Check restaurant name matches Food Amigo exactly
+- Check for extra spaces or case differences
 
-## Testing Workflow
+### "Image not found"
+- Verify filename spelling matches doc
+- Check image exists in Drive folder
+- Re-run validation to see specific errors
 
-### Phase 1: Parser Only (✅ Ready Now)
+---
 
-```bash
-python demo_parser.py
-```
+## 📊 What Happens
 
-### Phase 2: With Automation (After selectors added)
+1. **Load**: Read pending restaurants from sheet
+2. **Validate**: Check all data (docs, images, structure)
+3. **Automate**: Create pages for each validated restaurant
+4. **Update**: Mark completed in sheet
 
-```bash
-# Test with one file first
-python main.py "seo_files/test-page.docx"
+---
 
-# If successful, run batch
-python main.py
-```
+## 🎉 Start Small, Scale Up
 
-## Current File Structure
+**First time?**
+1. Start with 1 restaurant, 5 pages
+2. Run validation
+3. Fix any errors
+4. Run automation
+5. Verify pages created
+6. **Then** scale to 100 restaurants!
 
-```
-✅ models.py          - Data classes (SEOPageData, FAQ)
-✅ parser.py          - Word document parser
-✅ config.py          - Configuration management
-✅ utils.py           - Helper functions
-✅ main.py            - Main orchestration
-🚧 automation.py      - Playwright automation (needs selectors)
-✅ demo_parser.py     - Parser demonstration
-✅ test_parser.py     - Detailed parser test
-✅ requirements.txt   - Dependencies
-✅ .env.example       - Configuration template
-✅ README.md          - Full documentation
-```
+---
 
-## Integration Steps
-
-To integrate with your existing Playwright recording:
-
-1. **Open test.py** (your existing Playwright recording)
-2. **Extract selectors** from each action
-3. **Copy selectors** into corresponding methods in automation.py
-4. **Test each method** individually
-5. **Run complete workflow**
-
-### Example Integration
-
-From your recording in test.py:
-```python
-page.fill("input[name='email']", "user@example.com")
-```
-
-Copy to automation.py:
-```python
-def login(self):
-    self.page.goto(self.config.base_url)
-    self.page.fill("input[name='email']", self.config.email)
-    self.page.fill("input[name='password']", self.config.password)
-    self.page.click("button[type='submit']")
-```
-
-## Verification Checklist
-
-- [ ] Parser extracts all fields correctly
-- [ ] Validation passes for sample documents
-- [ ] .env file configured
-- [ ] Playwright selectors added to automation.py
-- [ ] Single file test succeeds
-- [ ] Batch processing succeeds
-
-## Common Issues
-
-### Parser Issues
-
-**Problem**: Field not extracted
-**Solution**: Check Word document format matches expected structure
-
-**Problem**: FAQ parsing fails
-**Solution**: Ensure FAQ format is "Title: Question" followed by "Description: Answer"
-
-### Automation Issues (After implementation)
-
-**Problem**: Element not found
-**Solution**: Update selector in automation.py
-
-**Problem**: Timeout
-**Solution**: Increase timeout in .env: `FOODAMIGO_TIMEOUT=60000`
-
-**Problem**: Login fails
-**Solution**: Verify credentials in .env file
-
-## Next Steps After Setup
-
-1. Test parser with all your Word documents
-2. Record a fresh Playwright session if needed
-3. Extract and add all selectors to automation.py
-4. Test with one document
-5. Run batch processing
-6. Review logs for any failures
-7. Iterate and improve error handling
-
-## Getting Help
-
-Check these files for detailed information:
-- `README.md` - Complete project documentation
-- `demo_parser.py` - See parser in action
-- `automation.py` - Review automation structure
-- `logs/` - Check execution logs
+**Need help? Check `BATCH_AUTOMATION_GUIDE.md` for full details!**
