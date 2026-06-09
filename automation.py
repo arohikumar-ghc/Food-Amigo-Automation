@@ -1066,23 +1066,28 @@ class FoodAmigoAutomation:
             drawer.wait_for(state="visible", timeout=10000)
             logger.debug("  ✓ Drawer container visible")
 
-            # Wait for FAQ Items tab to actually exist and be ready (event-driven, not fixed timeout)
-            logger.debug("  Waiting for FAQ Items tab to load...")
-            faq_items_tab = self.page.get_by_role("tab", name="FAQ Items")
-            faq_items_tab.wait_for(state="attached", timeout=10000)  # Wait for DOM
-            faq_items_tab.wait_for(state="visible", timeout=5000)     # Wait for display
+            # Give drawer content time to fully render (tabs load async)
+            logger.debug("  Waiting for drawer content to load...")
+            self.page.wait_for_timeout(2000)
 
             # Clear any overlays that might be blocking
             self._dismiss_blocking_overlays()
 
-            logger.debug("  ✓ Drawer fully rendered and ready")
-
-            logger.debug("  Clicking 'FAQ Items' tab...")
-            faq_items_tab.click()
-            logger.debug("  ✓ FAQ Items tab opened")
+            # Try to find and click FAQ Items tab
+            logger.debug("  Looking for FAQ Items tab...")
+            try:
+                faq_items_tab = self.page.get_by_role("tab", name="FAQ Items")
+                faq_items_tab.wait_for(state="visible", timeout=5000)
+                logger.debug("  Clicking 'FAQ Items' tab...")
+                faq_items_tab.click()
+                logger.debug("  ✓ FAQ Items tab opened")
+            except Exception as tab_error:
+                logger.warning(f"  Could not find FAQ Items tab: {tab_error}")
+                logger.debug("  Attempting to proceed without tab click (may already be on FAQ Items)...")
 
             # Wait for FAQ Items tab content to load
             logger.debug("  Waiting for FAQ Items tab content...")
+            self.page.wait_for_timeout(1000)
             add_button = self.page.get_by_role("button", name="plus Add")
             add_button.wait_for(state="visible", timeout=10000)
             self._dismiss_blocking_overlays()
