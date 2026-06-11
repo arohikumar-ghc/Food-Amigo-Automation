@@ -379,7 +379,9 @@ class FoodAmigoAutomation:
         Raises:
             Exception: If restaurant not found
         """
-        logger.info(f"Selecting restaurant: {self.config.restaurant_name}")
+        # Clean up restaurant name (remove extra spaces)
+        restaurant_name = self.config.restaurant_name.strip()
+        logger.info(f"Selecting restaurant: {restaurant_name}")
 
         # Click dropdown to open
         logger.debug("Clicking restaurant dropdown...")
@@ -390,16 +392,23 @@ class FoodAmigoAutomation:
         self.page.wait_for_timeout(1500)
 
         # Try to type the restaurant name (in case it's a searchable dropdown)
-        logger.debug(f"Typing restaurant name: {self.config.restaurant_name}")
-        self.page.keyboard.type(self.config.restaurant_name)
+        logger.debug(f"Typing restaurant name: {restaurant_name}")
+        self.page.keyboard.type(restaurant_name)
 
         # Wait for filtered results
         self.page.wait_for_timeout(800)
 
-        # Now click the option
+        # Now click the option - try with exact match first, then with flexible matching
         logger.debug(f"Clicking restaurant option...")
-        restaurant_option = self.page.get_by_role("option", name=self.config.restaurant_name)
-        restaurant_option.click(timeout=10000)
+        try:
+            # Try exact match first
+            restaurant_option = self.page.get_by_role("option", name=restaurant_name, exact=True)
+            restaurant_option.click(timeout=10000)
+        except Exception as e:
+            logger.debug(f"Exact match failed, trying flexible match: {e}")
+            # Try partial match (in case there are leading/trailing spaces in the option)
+            restaurant_option = self.page.get_by_role("option").filter(has_text=restaurant_name)
+            restaurant_option.first.click(timeout=10000)
 
         # Use domcontentloaded instead of networkidle (faster and more reliable)
         self.page.wait_for_load_state("domcontentloaded", timeout=15000)
@@ -680,7 +689,7 @@ class FoodAmigoAutomation:
         logger.debug("  ✓ Name filled")
 
         logger.debug("  Clicking Save button...")
-        save_btn = self.page.get_by_role("button", name="Save")
+        save_btn = self.page.get_by_role("button", name="Save", exact=True)
         save_btn.wait_for(state="visible", timeout=10000)
         # Wait for button to be enabled (React validation may run async)
         save_btn.evaluate("btn => btn.disabled === false")
@@ -757,7 +766,7 @@ class FoodAmigoAutomation:
 
         # Save
         logger.debug("  Clicking Save...")
-        save_btn = self.page.get_by_role("button", name="Save")
+        save_btn = self.page.get_by_role("button", name="Save", exact=True)
         save_btn.wait_for(state="visible", timeout=10000)
         # Wait for button to be enabled (React validation may run async)
         self.page.wait_for_timeout(300)  # Small delay for any async validation
@@ -828,7 +837,7 @@ class FoodAmigoAutomation:
 
         # Save
         logger.debug("  Clicking Save...")
-        save_btn = self.page.get_by_role("button", name="Save")
+        save_btn = self.page.get_by_role("button", name="Save", exact=True)
         save_btn.wait_for(state="visible", timeout=10000)
         # Wait for button to be enabled (React validation may run async)
         self.page.wait_for_timeout(300)  # Small delay for any async validation
@@ -979,7 +988,7 @@ class FoodAmigoAutomation:
         self._dismiss_blocking_overlays()
 
         logger.debug("  Clicking Save...")
-        save_btn = self.page.get_by_role("button", name="Save")
+        save_btn = self.page.get_by_role("button", name="Save", exact=True)
         save_btn.wait_for(state="visible", timeout=10000)
 
         # Wait for button to be enabled (React validation may run async)
@@ -1198,7 +1207,7 @@ class FoodAmigoAutomation:
         logger.debug("    ✓ Answer filled")
 
         logger.debug("    Clicking Save...")
-        save_btn = self.page.get_by_label("FAQ Item", exact=True).get_by_role("button", name="Save")
+        save_btn = self.page.get_by_label("FAQ Item", exact=True).get_by_role("button", name="Save", exact=True)
         save_btn.wait_for(state="visible", timeout=10000)
 
         # Wait for button to be enabled (React validation may run async)

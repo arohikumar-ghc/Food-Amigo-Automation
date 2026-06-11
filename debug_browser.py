@@ -45,7 +45,7 @@ def main():
         # Navigate to Food Amigo
         try:
             print("\nNavigating to Food Amigo...")
-            page.goto("https://restaurant-staging.foodamigos.io/login", timeout=30000)
+            page.goto("https://restaurant.foodamigos.io/login", timeout=30000)
             print("✓ Page loaded")
         except Exception as e:
             print(f"⚠ Navigation warning: {e}")

@@ -105,7 +105,7 @@ python batch_automation.py                   # Run automation
 
 3. **Use Playwright Codegen** (if it loads):
    ```bash
-   playwright codegen --target python https://restaurant-staging.foodamigos.io/login
+   playwright codegen --target python https://restaurant.foodamigos.io/login
    ```
    Record the exact steps and share the code
 

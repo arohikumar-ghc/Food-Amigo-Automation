@@ -16,7 +16,7 @@ class AutomationConfig:
     password: str
     restaurant_name: str
 
-    base_url: str = "https://restaurant-staging.foodamigos.io"
+    base_url: str = "https://restaurant.foodamigos.io"
 
     # Google Drive sync folder (change this to your actual Google Drive path)
     seo_files_dir: str = r"C:\Users\Arohi\Google Drive\My Drive\SEO Pages"
