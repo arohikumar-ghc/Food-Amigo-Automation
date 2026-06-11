@@ -394,6 +394,8 @@ class FoodAmigoAutomation:
         # Try to type the restaurant name (in case it's a searchable dropdown)
         logger.debug(f"Typing restaurant name: {restaurant_name}")
         self.page.keyboard.type(restaurant_name)
+        logger.debug(f"Typing restaurant name: {self.config.restaurant_name}")
+        self.page.keyboard.type(self.config.restaurant_name)
 
         # Wait for filtered results
         self.page.wait_for_timeout(800)
@@ -409,6 +411,10 @@ class FoodAmigoAutomation:
             # Try partial match (in case there are leading/trailing spaces in the option)
             restaurant_option = self.page.get_by_role("option").filter(has_text=restaurant_name)
             restaurant_option.first.click(timeout=10000)
+        # Now click the option
+        logger.debug(f"Clicking restaurant option...")
+        restaurant_option = self.page.get_by_role("option", name=self.config.restaurant_name)
+        restaurant_option.click(timeout=10000)
 
         # Use domcontentloaded instead of networkidle (faster and more reliable)
         self.page.wait_for_load_state("domcontentloaded", timeout=15000)
