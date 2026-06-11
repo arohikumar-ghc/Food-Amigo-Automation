@@ -292,4 +292,5 @@ python restore_backup.py
 
 python batch_automation.py
 
+python regenerate_token.py 
 python regenerate_token.py

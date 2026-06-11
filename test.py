@@ -5,7 +5,7 @@ with sync_playwright() as p:
 
     page = browser.new_page()
 
-    page.goto("https://restaurant-staging.foodamigos.io")
+    page.goto("https://restaurant.foodamigos.io")
 
     print("Page Title:", page.title())
 

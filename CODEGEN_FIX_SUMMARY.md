@@ -88,7 +88,7 @@ upload_button.set_input_files(image_path)
 source venv/Scripts/activate
 
 # Launched Playwright codegen
-playwright codegen https://restaurant-staging.foodamigos.io/login
+playwright codegen https://restaurant.foodamigos.io/login
 ```
 
 ### Actions Recorded:

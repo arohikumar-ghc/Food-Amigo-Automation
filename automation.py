@@ -379,7 +379,9 @@ class FoodAmigoAutomation:
         Raises:
             Exception: If restaurant not found
         """
-        logger.info(f"Selecting restaurant: {self.config.restaurant_name}")
+        # Clean up restaurant name (remove extra spaces)
+        restaurant_name = self.config.restaurant_name.strip()
+        logger.info(f"Selecting restaurant: {restaurant_name}")
 
         # Click dropdown to open
         logger.debug("Clicking restaurant dropdown...")
@@ -390,12 +392,25 @@ class FoodAmigoAutomation:
         self.page.wait_for_timeout(1500)
 
         # Try to type the restaurant name (in case it's a searchable dropdown)
+        logger.debug(f"Typing restaurant name: {restaurant_name}")
+        self.page.keyboard.type(restaurant_name)
         logger.debug(f"Typing restaurant name: {self.config.restaurant_name}")
         self.page.keyboard.type(self.config.restaurant_name)
 
         # Wait for filtered results
         self.page.wait_for_timeout(800)
 
+        # Now click the option - try with exact match first, then with flexible matching
+        logger.debug(f"Clicking restaurant option...")
+        try:
+            # Try exact match first
+            restaurant_option = self.page.get_by_role("option", name=restaurant_name, exact=True)
+            restaurant_option.click(timeout=10000)
+        except Exception as e:
+            logger.debug(f"Exact match failed, trying flexible match: {e}")
+            # Try partial match (in case there are leading/trailing spaces in the option)
+            restaurant_option = self.page.get_by_role("option").filter(has_text=restaurant_name)
+            restaurant_option.first.click(timeout=10000)
         # Now click the option
         logger.debug(f"Clicking restaurant option...")
         restaurant_option = self.page.get_by_role("option", name=self.config.restaurant_name)
@@ -680,7 +695,7 @@ class FoodAmigoAutomation:
         logger.debug("  ✓ Name filled")
 
         logger.debug("  Clicking Save button...")
-        save_btn = self.page.get_by_role("button", name="Save")
+        save_btn = self.page.get_by_role("button", name="Save", exact=True)
         save_btn.wait_for(state="visible", timeout=10000)
         # Wait for button to be enabled (React validation may run async)
         save_btn.evaluate("btn => btn.disabled === false")
@@ -757,7 +772,7 @@ class FoodAmigoAutomation:
 
         # Save
         logger.debug("  Clicking Save...")
-        save_btn = self.page.get_by_role("button", name="Save")
+        save_btn = self.page.get_by_role("button", name="Save", exact=True)
         save_btn.wait_for(state="visible", timeout=10000)
         # Wait for button to be enabled (React validation may run async)
         self.page.wait_for_timeout(300)  # Small delay for any async validation
@@ -828,7 +843,7 @@ class FoodAmigoAutomation:
 
         # Save
         logger.debug("  Clicking Save...")
-        save_btn = self.page.get_by_role("button", name="Save")
+        save_btn = self.page.get_by_role("button", name="Save", exact=True)
         save_btn.wait_for(state="visible", timeout=10000)
         # Wait for button to be enabled (React validation may run async)
         self.page.wait_for_timeout(300)  # Small delay for any async validation
@@ -979,7 +994,7 @@ class FoodAmigoAutomation:
         self._dismiss_blocking_overlays()
 
         logger.debug("  Clicking Save...")
-        save_btn = self.page.get_by_role("button", name="Save")
+        save_btn = self.page.get_by_role("button", name="Save", exact=True)
         save_btn.wait_for(state="visible", timeout=10000)
 
         # Wait for button to be enabled (React validation may run async)
@@ -1066,23 +1081,28 @@ class FoodAmigoAutomation:
             drawer.wait_for(state="visible", timeout=10000)
             logger.debug("  ✓ Drawer container visible")
 
-            # Wait for FAQ Items tab to actually exist and be ready (event-driven, not fixed timeout)
-            logger.debug("  Waiting for FAQ Items tab to load...")
-            faq_items_tab = self.page.get_by_role("tab", name="FAQ Items")
-            faq_items_tab.wait_for(state="attached", timeout=10000)  # Wait for DOM
-            faq_items_tab.wait_for(state="visible", timeout=5000)     # Wait for display
+            # Give drawer content time to fully render (tabs load async)
+            logger.debug("  Waiting for drawer content to load...")
+            self.page.wait_for_timeout(2000)
 
             # Clear any overlays that might be blocking
             self._dismiss_blocking_overlays()
 
-            logger.debug("  ✓ Drawer fully rendered and ready")
-
-            logger.debug("  Clicking 'FAQ Items' tab...")
-            faq_items_tab.click()
-            logger.debug("  ✓ FAQ Items tab opened")
+            # Try to find and click FAQ Items tab
+            logger.debug("  Looking for FAQ Items tab...")
+            try:
+                faq_items_tab = self.page.get_by_role("tab", name="FAQ Items")
+                faq_items_tab.wait_for(state="visible", timeout=5000)
+                logger.debug("  Clicking 'FAQ Items' tab...")
+                faq_items_tab.click()
+                logger.debug("  ✓ FAQ Items tab opened")
+            except Exception as tab_error:
+                logger.warning(f"  Could not find FAQ Items tab: {tab_error}")
+                logger.debug("  Attempting to proceed without tab click (may already be on FAQ Items)...")
 
             # Wait for FAQ Items tab content to load
             logger.debug("  Waiting for FAQ Items tab content...")
+            self.page.wait_for_timeout(1000)
             add_button = self.page.get_by_role("button", name="plus Add")
             add_button.wait_for(state="visible", timeout=10000)
             self._dismiss_blocking_overlays()
@@ -1193,7 +1213,7 @@ class FoodAmigoAutomation:
         logger.debug("    ✓ Answer filled")
 
         logger.debug("    Clicking Save...")
-        save_btn = self.page.get_by_label("FAQ Item", exact=True).get_by_role("button", name="Save")
+        save_btn = self.page.get_by_label("FAQ Item", exact=True).get_by_role("button", name="Save", exact=True)
         save_btn.wait_for(state="visible", timeout=10000)
 
         # Wait for button to be enabled (React validation may run async)
