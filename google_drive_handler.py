@@ -128,7 +128,8 @@ class GoogleDriveHandler:
                 local_path = restaurant_cache / filename
                 self._download_file(file_id, local_path)
 
-                # Store in lookup (case-insensitive key)
+                # Store in lookup (lowercase key for case-insensitive matching)
+                # Note: Whitespace normalization is handled in find_image_case_insensitive
                 key = filename.lower()
                 downloaded[key] = local_path
 
@@ -207,10 +208,38 @@ def extract_folder_id(folder_url: str) -> str:
     raise ValueError(f"Could not extract folder ID from URL: {folder_url}")
 
 
+def _normalize_whitespace(filename: str) -> str:
+    """
+    Normalize whitespace in filename for flexible matching.
+
+    - Trims leading and trailing spaces
+    - Treats multiple consecutive spaces as a single space
+    - Converts to lowercase for case-insensitive comparison
+
+    Args:
+        filename: Original filename
+
+    Returns:
+        Normalized filename
+
+    Example:
+        "Indian  Comfort   Food.jpg" -> "indian comfort food.jpg"
+        " Paneer  Tikka .jpg " -> "paneer tikka .jpg"
+    """
+    import re
+    # Trim leading/trailing whitespace
+    normalized = filename.strip()
+    # Replace multiple consecutive spaces with single space
+    normalized = re.sub(r'\s+', ' ', normalized)
+    # Convert to lowercase for case-insensitive comparison
+    normalized = normalized.lower()
+    return normalized
+
+
 def find_image_case_insensitive(filename: str, image_lookup: Dict[str, Path]) -> Optional[Path]:
     """
     Find image in lookup dictionary with case-insensitive matching.
-    Also handles extension mismatches (e.g., .jpg vs .png).
+    Also handles extension mismatches (e.g., .jpg vs .png) and whitespace differences.
 
     Args:
         filename: Image filename from document (e.g., "001-Butter-Chicken.jpg")
@@ -219,17 +248,25 @@ def find_image_case_insensitive(filename: str, image_lookup: Dict[str, Path]) ->
     Returns:
         Local file path if found, None otherwise
     """
-    key = filename.lower()
+    # Normalize whitespace for flexible matching
+    normalized_key = _normalize_whitespace(filename)
 
-    # Try exact match first
-    if key in image_lookup:
-        return image_lookup[key]
+    # Try exact match first (with normalized whitespace)
+    if normalized_key in image_lookup:
+        return image_lookup[normalized_key]
 
-    # Try matching without extension (handles .jpg vs .png mismatches)
-    name_without_ext = key.rsplit('.', 1)[0] if '.' in key else key
+    # Try matching in lookup with whitespace normalization
+    for lookup_filename, path in image_lookup.items():
+        normalized_lookup = _normalize_whitespace(lookup_filename)
+        if normalized_key == normalized_lookup:
+            return path
+
+    # Try matching without extension (handles .jpg vs .png mismatches + whitespace)
+    name_without_ext = normalized_key.rsplit('.', 1)[0] if '.' in normalized_key else normalized_key
 
     for lookup_filename, path in image_lookup.items():
-        lookup_name_without_ext = lookup_filename.rsplit('.', 1)[0] if '.' in lookup_filename else lookup_filename
+        normalized_lookup = _normalize_whitespace(lookup_filename)
+        lookup_name_without_ext = normalized_lookup.rsplit('.', 1)[0] if '.' in normalized_lookup else normalized_lookup
         if name_without_ext == lookup_name_without_ext:
             return path
 
