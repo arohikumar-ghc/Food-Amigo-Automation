@@ -165,11 +165,11 @@ class DataValidator:
                 missing_images.append(f"Page {i} ({page.page_name}): {page.image_filename}")
 
         if missing_images:
-            result.add_error(f"Missing {len(missing_images)} images referenced in document:")
+            result.add_warning(f"Missing {len(missing_images)} images referenced in document:")
             for missing in missing_images[:5]:  # Show first 5
-                result.add_error(f"  - {missing}")
+                result.add_warning(f"  - {missing}")
             if len(missing_images) > 5:
-                result.add_error(f"  ... and {len(missing_images) - 5} more")
+                result.add_warning(f"  ... and {len(missing_images) - 5} more")
 
         # Step 5: Validate page structure
         logger.info(f"→ Validating page structure...")

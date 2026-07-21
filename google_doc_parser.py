@@ -195,11 +195,33 @@ class GoogleDocParser:
                 key = key.strip()
                 value = value.strip()
 
-                fields[key] = value
-                current_key = key
+                # Check if this is actually a known field or FAQ field
+                # This prevents Description continuation from being broken by URLs or other colons
+                is_valid_field = (
+                    key in self.REQUIRED_FIELDS or
+                    key.startswith('FAQ Question ') or
+                    key.startswith('FAQ Answer ') or
+                    key in ['Social Title', 'Social Description', 'Image']
+                )
+
+                if is_valid_field:
+                    # Initialize field (empty string if value is empty)
+                    fields[key] = value
+                    current_key = key
+                elif current_key:
+                    # Not a valid field - treat as continuation of current field
+                    # This handles URLs with colons in Description field
+                    if fields[current_key]:
+                        fields[current_key] += ' ' + line
+                    else:
+                        fields[current_key] = line
             elif current_key:
                 # Multi-line value continuation
-                fields[current_key] += ' ' + line
+                # If field is empty (Format 2: value starts on next line), don't add space prefix
+                if fields[current_key]:
+                    fields[current_key] += ' ' + line
+                else:
+                    fields[current_key] = line
 
         # Validate required fields
         missing_fields = [f for f in self.REQUIRED_FIELDS if f not in fields or not fields[f]]
